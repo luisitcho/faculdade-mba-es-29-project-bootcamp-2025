@@ -55,7 +55,7 @@ Este projeto é um Sistema de Estoque desenvolvido para gerenciar itens por cate
 ## Como Executar o Projeto
 1. Clone este repositório:
    ```bash
-   git clone https://github.com/seu-usuario/project-bootcamp-inventory-system.git
+   git clone https://github.com/luisitcho/faculdade-mba-es-29-project-bootcamp-2025
    ```
 
 2. Instale as dependências:
