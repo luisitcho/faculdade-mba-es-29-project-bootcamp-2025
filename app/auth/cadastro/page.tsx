@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 export default function CadastroPage() {
   const [nome, setNome] = useState("")
@@ -20,7 +20,27 @@ export default function CadastroPage() {
   const [perfilAcesso, setPerfilAcesso] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [checkingAuth, setCheckingAuth] = useState(true)
   const router = useRouter()
+
+  useEffect(() => {
+    const checkUserRole = async () => {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (user) {
+        const { data: profile } = await supabase.from("usuarios").select("perfil_acesso").eq("id", user.id).single()
+
+        setIsAdmin(profile?.perfil_acesso === "admin")
+      }
+      setCheckingAuth(false)
+    }
+
+    checkUserRole()
+  }, [])
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,7 +54,9 @@ export default function CadastroPage() {
       return
     }
 
-    if (!perfilAcesso) {
+    const finalPerfilAcesso = isAdmin ? perfilAcesso : "consulta"
+
+    if (isAdmin && !perfilAcesso) {
       setError("Selecione um perfil de acesso")
       setIsLoading(false)
       return
@@ -47,7 +69,7 @@ export default function CadastroPage() {
         options: {
           data: {
             nome,
-            perfil_acesso: perfilAcesso,
+            perfil_acesso: finalPerfilAcesso,
           },
         },
       })
@@ -55,16 +77,7 @@ export default function CadastroPage() {
       if (error) throw error
 
       if (data.user) {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-
-        if (signInError) {
-          router.push("/auth/sucesso")
-        } else {
-          router.push("/dashboard")
-        }
+        router.push("/auth/sucesso")
       }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Erro ao criar conta")
@@ -73,13 +86,25 @@ export default function CadastroPage() {
     }
   }
 
+  if (checkingAuth) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center p-6 bg-muted/50">
+        <div className="text-center">Verificando permissões...</div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex min-h-screen w-full items-center justify-center p-6 bg-muted/50">
       <div className="w-full max-w-sm">
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">Criar Conta</CardTitle>
-            <CardDescription>Preencha os dados para criar sua conta no sistema</CardDescription>
+            <CardTitle className="text-2xl font-bold">{isAdmin ? "Criar Usuário" : "Criar Conta"}</CardTitle>
+            <CardDescription>
+              {isAdmin
+                ? "Preencha os dados para criar um novo usuário no sistema"
+                : "Preencha os dados para criar sua conta no sistema"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSignUp} className="space-y-4">
@@ -105,19 +130,21 @@ export default function CadastroPage() {
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="perfil">Perfil de Acesso</Label>
-                <Select value={perfilAcesso} onValueChange={setPerfilAcesso}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o perfil" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="consulta">Consulta</SelectItem>
-                    <SelectItem value="operador">Operador</SelectItem>
-                    <SelectItem value="admin">Administrador</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {isAdmin && (
+                <div className="space-y-2">
+                  <Label htmlFor="perfil">Perfil de Acesso</Label>
+                  <Select value={perfilAcesso} onValueChange={setPerfilAcesso}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o perfil" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="consulta">Consulta</SelectItem>
+                      <SelectItem value="operador">Operador</SelectItem>
+                      <SelectItem value="admin">Administrador</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="password">Senha</Label>
                 <Input
@@ -140,15 +167,17 @@ export default function CadastroPage() {
               </div>
               {error && <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">{error}</div>}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Criando conta..." : "Criar Conta"}
+                {isLoading ? "Criando conta..." : isAdmin ? "Criar Usuário" : "Criar Conta"}
               </Button>
             </form>
-            <div className="mt-4 text-center text-sm text-muted-foreground">
-              Já tem uma conta?{" "}
-              <Link href="/auth/login" className="text-primary underline underline-offset-4 hover:text-primary/80">
-                Faça login
-              </Link>
-            </div>
+            {!isAdmin && (
+              <div className="mt-4 text-center text-sm text-muted-foreground">
+                Já tem uma conta?{" "}
+                <Link href="/auth/login" className="text-primary underline underline-offset-4 hover:text-primary/80">
+                  Faça login
+                </Link>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

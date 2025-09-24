@@ -1,6 +1,6 @@
 import type React from "react"
 import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server" // ✅ server-side client
+import { createClient } from "@/lib/supabase/server"
 import { Sidebar } from "@/components/sidebar"
 import { ToastNotifications } from "@/components/toast-notifications"
 import { Toaster } from "@/components/ui/toaster"
@@ -10,7 +10,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient() // ✅ já retorna o server client
+  const supabase = await createClient()
 
   const { data, error } = await supabase.auth.getUser()
   if (error || !data?.user) {
@@ -18,11 +18,7 @@ export default async function DashboardLayout({
   }
 
   // Buscar dados do perfil do usuário
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", data.user.id)
-    .single()
+  const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
 
   return (
     <div className="flex h-screen bg-background">

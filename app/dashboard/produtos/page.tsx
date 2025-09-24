@@ -59,7 +59,9 @@ export default async function ProdutosPage({
   const produtosBaixoEstoque = produtos?.filter((p) => p.estoque_atual <= p.estoque_minimo).length || 0
   const valorTotalEstoque = produtos?.reduce((total, p) => total + p.estoque_atual * (p.valor_unitario || 0), 0) || 0
 
+  const isMainAdmin = profile?.email === "admin@admin.com" && profile?.perfil_acesso === "admin"
   const podeEditar =
+    isMainAdmin ||
     profile?.perfil_acesso === "super_admin" ||
     profile?.perfil_acesso === "admin" ||
     profile?.perfil_acesso === "operador"
@@ -161,13 +163,11 @@ export default async function ProdutosPage({
               </div>
             </div>
             <Select defaultValue={searchParams.categoria || "all"}>
-              {" "}
-              {/* Updated default value */}
               <SelectTrigger className="w-full md:w-[200px]">
                 <SelectValue placeholder="Todas as categorias" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todas as categorias</SelectItem> {/* Updated value */}
+                <SelectItem value="all">Todas as categorias</SelectItem>
                 {categorias?.map((categoria) => (
                   <SelectItem key={categoria.id} value={categoria.id}>
                     {categoria.nome}

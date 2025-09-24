@@ -1,9 +1,8 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { UserPlus, Search, Users, UserCheck, UserX } from "lucide-react"
+import { Search, Users, UserCheck, UserX } from "lucide-react"
 import { GestaoUsuariosList } from "@/components/gestao-usuarios-list"
 
 interface SearchParams {
@@ -27,7 +26,9 @@ export default async function UsuariosPage({
   // Verificar se é admin ou super_admin
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
 
-  if (profile?.perfil_acesso !== "admin" && profile?.perfil_acesso !== "super_admin") {
+  const isMainAdmin = profile?.email === "admin@admin.com" && profile?.perfil_acesso === "admin"
+
+  if (!isMainAdmin && profile?.perfil_acesso !== "super_admin") {
     redirect("/dashboard")
   }
 
@@ -79,12 +80,6 @@ export default async function UsuariosPage({
           <h1 className="text-3xl font-bold tracking-tight">Gerenciar Usuários</h1>
           <p className="text-muted-foreground">Visualize e gerencie os usuários do sistema</p>
         </div>
-        {profile?.perfil_acesso === "super_admin" && (
-          <Button>
-            <UserPlus className="mr-2 h-4 w-4" />
-            Convidar Usuário
-          </Button>
-        )}
       </div>
 
       {/* Estatísticas */}
@@ -158,7 +153,12 @@ export default async function UsuariosPage({
       </Card>
 
       {/* Lista de Usuários */}
-      <GestaoUsuariosList usuarios={usuarios || []} currentUserProfile={profile} getPerfilColor={getPerfilColor} />
+      <GestaoUsuariosList
+        usuarios={usuarios || []}
+        currentUserProfile={profile}
+        getPerfilColor={getPerfilColor}
+        isMainAdmin={isMainAdmin}
+      />
     </div>
   )
 }

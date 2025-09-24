@@ -13,7 +13,9 @@ export default async function NovoProdutoPage() {
   // Verificar permissões
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
 
-  if (profile?.perfil_acesso !== "admin" && profile?.perfil_acesso !== "operador") {
+  const isMainAdmin = profile?.email === "admin@admin.com" && profile?.perfil_acesso === "admin"
+
+  if (!isMainAdmin && profile?.perfil_acesso !== "admin" && profile?.perfil_acesso !== "operador") {
     redirect("/dashboard/produtos")
   }
 

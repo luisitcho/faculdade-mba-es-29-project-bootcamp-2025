@@ -44,9 +44,15 @@ interface GestaoUsuariosListProps {
   usuarios: Usuario[]
   currentUserProfile: any
   getPerfilColor: (perfil: string) => string
+  isMainAdmin: boolean // Adicionado prop para identificar admin principal
 }
 
-export function GestaoUsuariosList({ usuarios, currentUserProfile, getPerfilColor }: GestaoUsuariosListProps) {
+export function GestaoUsuariosList({
+  usuarios,
+  currentUserProfile,
+  getPerfilColor,
+  isMainAdmin,
+}: GestaoUsuariosListProps) {
   const [editandoUsuario, setEditandoUsuario] = useState<Usuario | null>(null)
   const [novoNome, setNovoNome] = useState("")
   const [novoPerfil, setNovoPerfil] = useState("")
@@ -69,22 +75,18 @@ export function GestaoUsuariosList({ usuarios, currentUserProfile, getPerfilColo
   }
 
   const canEditUser = (usuario: Usuario) => {
-    const currentLevel = getPerfilHierarchy(currentUserProfile.perfil_acesso)
-    const targetLevel = getPerfilHierarchy(usuario.perfil_acesso)
-
-    // Super admin pode editar todos, admin pode editar operador e consulta
-    return currentLevel > targetLevel || currentUserProfile.id === usuario.id
+    return isMainAdmin && usuario.id !== currentUserProfile.id
   }
 
   const getAvailableProfiles = () => {
-    const currentLevel = getPerfilHierarchy(currentUserProfile.perfil_acesso)
-    const profiles = []
-
-    if (currentLevel >= 4) profiles.push({ value: "admin", label: "Administrador" })
-    if (currentLevel >= 3) profiles.push({ value: "operador", label: "Operador" })
-    profiles.push({ value: "consulta", label: "Consulta" })
-
-    return profiles
+    if (isMainAdmin) {
+      return [
+        { value: "admin", label: "Administrador" },
+        { value: "operador", label: "Operador" },
+        { value: "consulta", label: "Consulta" },
+      ]
+    }
+    return [{ value: "consulta", label: "Consulta" }]
   }
 
   const handleEditarUsuario = (usuario: Usuario) => {

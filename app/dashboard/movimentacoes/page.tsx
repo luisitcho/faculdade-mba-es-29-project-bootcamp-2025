@@ -52,12 +52,8 @@ export default async function MovimentacoesPage({
     query = query.eq("tipo_movimentacao", searchParams.tipo)
   }
 
-  if (searchParams.produto && searchParams.produto !== "all") {
+  if (searchParams.produto) {
     query = query.eq("produto_id", searchParams.produto)
-  }
-
-  if (searchParams.data) {
-    query = query.gte("created_at", `${searchParams.data}T00:00:00`).lt("created_at", `${searchParams.data}T23:59:59`)
   }
 
   const { data: movimentacoes } = await query.order("created_at", { ascending: false }).limit(50)
