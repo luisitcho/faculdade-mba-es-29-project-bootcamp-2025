@@ -1,70 +1,41 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
 
-import { supabase } from "@/lib/supabase/client" // importando a constante já inicializada
+import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
 
-export default function CadastroPage() {
-  const [nome, setNome] = useState("")
+export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [perfilAcesso, setPerfilAcesso] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    const supabase = createClient()
     setIsLoading(true)
     setError(null)
 
-    if (password !== confirmPassword) {
-      setError("As senhas não coincidem")
-      setIsLoading(false)
-      return
-    }
-
-    if (!perfilAcesso) {
-      setError("Selecione um perfil de acesso")
-      setIsLoading(false)
-      return
-    }
-
     try {
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
         options: {
-          data: {
-            nome,
-            perfil_acesso: perfilAcesso,
-          },
+          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/dashboard`,
         },
       })
-
-      if (signUpError) throw signUpError
-
-      if (data.user) {
-        // Loga o usuário automaticamente
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-
-        if (signInError) {
-          router.push("/auth/sucesso")
-        } else {
-          router.push("/dashboard")
-        }
-      }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Erro ao criar conta")
+      if (error) throw error
+      router.push("/dashboard")
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Erro ao fazer login")
     } finally {
       setIsLoading(false)
     }
@@ -75,23 +46,11 @@ export default function CadastroPage() {
       <div className="w-full max-w-sm">
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">Criar Conta</CardTitle>
-            <CardDescription>Preencha os dados para criar sua conta no sistema</CardDescription>
+            <CardTitle className="text-2xl font-bold">Sistema de Estoque</CardTitle>
+            <CardDescription>Entre com suas credenciais para acessar o sistema</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSignUp} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="nome">Nome Completo</Label>
-                <Input
-                  id="nome"
-                  type="text"
-                  placeholder="Seu nome completo"
-                  required
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                />
-              </div>
-
+            <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -103,21 +62,6 @@ export default function CadastroPage() {
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="perfil">Perfil de Acesso</Label>
-                <Select value={perfilAcesso} onValueChange={setPerfilAcesso}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o perfil" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="consulta">Consulta</SelectItem>
-                    <SelectItem value="operador">Operador</SelectItem>
-                    <SelectItem value="admin">Administrador</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
               <div className="space-y-2">
                 <Label htmlFor="password">Senha</Label>
                 <Input
@@ -128,31 +72,15 @@ export default function CadastroPage() {
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-              </div>
-
-              {error && (
-                <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">{error}</div>
-              )}
-
+              {error && <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">{error}</div>}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Criando conta..." : "Criar Conta"}
+                {isLoading ? "Entrando..." : "Entrar"}
               </Button>
             </form>
-
             <div className="mt-4 text-center text-sm text-muted-foreground">
-              Já tem uma conta?{" "}
-              <Link href="/auth/login" className="text-primary underline underline-offset-4 hover:text-primary/80">
-                Faça login
+              Não tem uma conta?{" "}
+              <Link href="/auth/cadastro" className="text-primary underline underline-offset-4 hover:text-primary/80">
+                Cadastre-se
               </Link>
             </div>
           </CardContent>

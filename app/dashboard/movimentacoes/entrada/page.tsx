@@ -11,13 +11,17 @@ export default async function NovaEntradaPage() {
   }
 
   // Verificar permissões
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", data.user.id)
+    .single()
 
-  if (profile?.perfil_acesso !== "admin" && profile?.perfil_acesso !== "operador") {
+  if (!profile || (profile.perfil_acesso !== "admin" && profile.perfil_acesso !== "operador")) {
     redirect("/dashboard/movimentacoes")
   }
 
-  // Buscar produtos
+  // Buscar produtos ativos
   const { data: produtos } = await supabase
     .from("produtos")
     .select(`
