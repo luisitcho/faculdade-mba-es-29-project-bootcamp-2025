@@ -249,14 +249,14 @@ export default async function DashboardPage() {
                 Relatórios
               </Link>
             </Button>
-            {isMainAdmin && (
+            {/* {isMainAdmin && (
               <Button asChild variant="outline" className="h-20 flex-col bg-transparent cursor-pointer">
                 <Link href="/dashboard/usuarios">
                   <Users className="h-6 w-6 mb-2" />
                   Gerenciar Usuários
                 </Link>
               </Button>
-            )}
+            )} */}
           </div>
         </CardContent>
       </Card>
