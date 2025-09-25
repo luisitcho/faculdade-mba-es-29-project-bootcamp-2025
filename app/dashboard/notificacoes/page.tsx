@@ -28,14 +28,14 @@ async function marcarComoLida(id: string) {
   return { success: true }
 }
 
-// Ação do servidor para marcar TODAS como lidas
+// Ação do servidor para marcar TODAS como lidas (versão simplificada)
 async function marcarTodasComoLidas() {
   "use server"
 
   const supabase = await createClient()
 
-  const { data, error } = await supabase.auth.getUser()
-  if (error || !data?.user) {
+  const { data: userData, error: userError } = await supabase.auth.getUser()
+  if (userError || !userData?.user) {
     return { success: false, error: "Usuário não autenticado" }
   }
 
@@ -45,7 +45,8 @@ async function marcarTodasComoLidas() {
       lida: true,
       updated_at: new Date().toISOString(),
     })
-    .eq("usuario_id", data.user.id)
+    .eq("usuario_id", userData.user.id)
+    .eq("lida", false) // Apenas as não lidas
 
   if (updateError) {
     console.error("Erro ao marcar todas como lidas:", updateError)
