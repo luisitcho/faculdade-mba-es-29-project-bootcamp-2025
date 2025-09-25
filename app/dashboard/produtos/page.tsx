@@ -56,6 +56,8 @@ export default async function ProdutosPage({
   if (produtosError) {
     console.error("Erro ao buscar produtos:", produtosError);
   }
+  const { data: teste } = await supabase.from("produtos").select("id", { count: "exact" })
+  console.log("Total produtos (teste):", teste?.length)
 
   const totalProdutos = produtos?.length || 0;
   const produtosBaixoEstoque =
