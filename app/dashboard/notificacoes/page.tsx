@@ -28,7 +28,7 @@ async function marcarComoLida(id: string) {
   return { success: true }
 }
 
-// Ação do servidor para marcar TODAS como lidas (versão simplificada)
+// Ação do servidor para marcar TODAS como lidas
 async function marcarTodasComoLidas() {
   "use server"
 
