@@ -57,6 +57,13 @@ export default async function ProdutosPage({
 
   const { data: produtos } = await query.order("nome")
 
+  console.log("=== DEBUG PRODUTOS PAGE ===")
+  console.log("Search Params:", searchParams)
+  console.log("Produtos fetched:", produtos?.length || 0)
+  console.log("===========================")
+
+  console.log(produtos)
+
   // Estatísticas
   // Estatísticas gerais
   const totalProdutos = produtos?.length || 0
