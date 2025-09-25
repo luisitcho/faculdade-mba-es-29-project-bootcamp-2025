@@ -20,6 +20,11 @@ export default async function DashboardLayout({
   // Buscar dados do perfil do usuário
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
   
+  // Debug temporário
+  console.log("Raw profile from DB:", profile)
+  console.log("User ID:", data.user.id)
+  console.log("User email:", data.user.email)
+  
   // Fallback se não encontrar perfil
   const userProfile = profile || {
     id: data.user.id,
@@ -28,6 +33,9 @@ export default async function DashboardLayout({
     perfil_acesso: 'consulta',
     ativo: true
   }
+  
+  // Debug do perfil final
+  console.log("Final userProfile:", userProfile)
 
   return (
     <div className="flex h-screen bg-background">
