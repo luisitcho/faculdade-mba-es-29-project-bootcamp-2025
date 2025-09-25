@@ -4,8 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Plus, Package, AlertTriangle, FileDown } from "lucide-react";
 import Link from "next/link";
-import { ProdutosList } from "@/components/produtos-list";
-import { FiltrosProdutos } from "@/components/filtros-produtos";
+// import { ProdutosList } from "@/components/produtos-list";
+// import { FiltrosProdutos } from "@/components/filtros-produtos";
 
 interface SearchParams {
   categoria?: string;
@@ -129,9 +129,9 @@ export default async function ProdutosPage({
         </Card>
       </div>
 
-      <FiltrosProdutos categorias={categorias || []} />
+      {/* <FiltrosProdutos categorias={categorias || []} />
 
-      <ProdutosList produtos={produtos || []} podeEditar={podeEditar} />
+      <ProdutosList produtos={produtos || []} podeEditar={podeEditar} /> */}
     </div>
   );
 }
