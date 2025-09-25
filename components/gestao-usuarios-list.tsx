@@ -75,11 +75,14 @@ export function GestaoUsuariosList({
   }
 
   const canEditUser = (usuario: Usuario) => {
-    return isMainAdmin && usuario.id !== currentUserProfile.id
+    // Apenas admins principais (admin@admin.com ou luishenrisc1@gmail.com) podem editar outros usuários
+    const isMainAdminUser = currentUserProfile?.email === "admin@admin.com" || currentUserProfile?.email === "luishenrisc1@gmail.com"
+    return isMainAdminUser && currentUserProfile?.perfil_acesso === "admin" && usuario.id !== currentUserProfile.id
   }
 
   const getAvailableProfiles = () => {
-    if (isMainAdmin) {
+    const isMainAdminUser = currentUserProfile?.email === "admin@admin.com" || currentUserProfile?.email === "luishenrisc1@gmail.com"
+    if (isMainAdminUser && currentUserProfile?.perfil_acesso === "admin") {
       return [
         { value: "admin", label: "Administrador" },
         { value: "operador", label: "Operador" },

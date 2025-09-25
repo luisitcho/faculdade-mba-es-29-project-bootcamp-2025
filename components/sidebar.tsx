@@ -78,7 +78,12 @@ export function Sidebar({ user, profile }: SidebarProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{profile?.nome || "Usuário"}</p>
-                <p className="text-xs text-muted-foreground capitalize">{profile?.perfil_acesso}</p>
+                <p className="text-xs text-muted-foreground capitalize">
+                  {profile?.perfil_acesso === "admin" ? "Administrador" : 
+                   profile?.perfil_acesso === "operador" ? "Operador" : 
+                   profile?.perfil_acesso === "consulta" ? "Consulta" : 
+                   profile?.perfil_acesso}
+                </p>
               </div>
             </div>
           </div>

@@ -16,7 +16,7 @@ export default async function DashboardPage() {
   // Buscar dados do perfil do usuário
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
 
-  const isMainAdmin = profile?.email === "admin@admin.com" && profile?.perfil_acesso === "admin"
+  const isMainAdmin = (profile?.email === "admin@admin.com" || profile?.email === "luishenrisc1@gmail.com") && profile?.perfil_acesso === "admin"
 
   // Buscar estatísticas básicas
   const { data: totalProdutos } = await supabase.from("produtos").select("id", { count: "exact" })

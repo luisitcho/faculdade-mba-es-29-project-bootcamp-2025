@@ -26,13 +26,13 @@ export default async function UsuariosPage({
   // Verificar se é admin ou super_admin
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
 
-  const isMainAdmin = profile?.email === "admin@admin.com" && profile?.perfil_acesso === "admin"
+  const isMainAdmin = (profile?.email === "admin@admin.com" || profile?.email === "luishenrisc1@gmail.com") && profile?.perfil_acesso === "admin"
 
   if (!isMainAdmin && profile?.perfil_acesso !== "super_admin") {
     redirect("/dashboard")
   }
 
-  // Construir query para usuários
+  // Construir query para usuários - apenas admins podem ver todos os usuários
   let query = supabase.from("profiles").select("*")
 
   // Aplicar filtros
@@ -78,7 +78,9 @@ export default async function UsuariosPage({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Gerenciar Usuários</h1>
-          <p className="text-muted-foreground">Visualize e gerencie os usuários do sistema</p>
+          <p className="text-muted-foreground">
+            Visualize e gerencie os usuários do sistema - Acesso restrito a administradores
+          </p>
         </div>
       </div>
 
