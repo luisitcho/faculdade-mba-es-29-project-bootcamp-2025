@@ -123,22 +123,6 @@ export default async function ProdutosPage({
         </div>
       </div>
 
-      {/* Debug info */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-        <p className="text-sm">
-          <strong>Debug Info:</strong> 
-          Produtos encontrados: {totalProdutos} | 
-          Total no banco: {totalProdutosCount} |
-          Com categorias: {produtosComCategorias.length}
-        </p>
-        {produtos && produtos.length > 0 && (
-          <div className="mt-2 text-xs">
-            <p>Primeiros produtos:</p>
-            <pre>{JSON.stringify(produtos.slice(0, 2), null, 2)}</pre>
-          </div>
-        )}
-      </div>
-
       {/* Estatísticas */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
