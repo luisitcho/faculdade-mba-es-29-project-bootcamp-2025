@@ -27,26 +27,26 @@ export default async function DashboardPage() {
 
   const isMainAdmin = (userProfile?.email === "admin@admin.com" || userProfile?.email === "luishenrisc1@gmail.com") && userProfile?.perfil_acesso === "admin"
 
-  // Buscar estatísticas básicas
+  // Buscar estatísticas básicas - CORRIGIDO: usando count() corretamente
   const { count: totalProdutosCount } = await supabase
     .from("produtos")
-    .select("*", { count: "exact", head: true })
+    .select("*", { count: "exact" })
 
   const { count: totalUsuariosCount } = await supabase
     .from("profiles")
-    .select("*", { count: "exact", head: true })
+    .select("*", { count: "exact" })
 
   // Produtos com estoque baixo (≤ 3) - CORRIGIDO
   const { count: produtosBaixoEstoqueCount } = await supabase
     .from("produtos")
-    .select("*", { count: "exact", head: true })
+    .select("*", { count: "exact" })
     .lte("estoque_atual", 3)
 
   // Movimentações de hoje
   const hoje = new Date().toISOString().split("T")[0]
   const { count: movimentacoesHojeCount } = await supabase
     .from("movimentacoes")
-    .select("*", { count: "exact", head: true })
+    .select("*", { count: "exact" })
     .gte("created_at", `${hoje}T00:00:00`)
     .lt("created_at", `${hoje}T23:59:59`)
 
