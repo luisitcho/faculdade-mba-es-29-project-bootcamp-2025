@@ -32,28 +32,35 @@ async function marcarComoLida(id: string) {
 async function marcarTodasComoLidas() {
   "use server"
 
-  const supabase = await createClient()
+  try {
+    const supabase = await createClient()
 
-  const { data: userData, error: userError } = await supabase.auth.getUser()
-  if (userError || !userData?.user) {
-    return { success: false, error: "Usuário não autenticado" }
+    const { data: userData, error: userError } = await supabase.auth.getUser()
+    if (userError || !userData?.user) {
+      throw new Error("Usuário não autenticado")
+    }
+
+    const { error: updateError } = await supabase
+      .from("notificacoes")
+      .update({
+        lida: true,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("usuario_id", userData.user.id)
+      .eq("lida", false)
+
+    if (updateError) {
+      throw new Error(updateError.message)
+    }
+
+    // Revalida a página para atualizar os dados
+    redirect("/notificacoes")
+    
+  } catch (error) {
+    console.error("Erro ao marcar todas como lidas:", error)
+    // Em caso de erro, também redireciona para recarregar a página
+    redirect("/notificacoes")
   }
-
-  const { error: updateError } = await supabase
-    .from("notificacoes")
-    .update({
-      lida: true,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("usuario_id", userData.user.id)
-    .eq("lida", false) // Apenas as não lidas
-
-  if (updateError) {
-    console.error("Erro ao marcar todas como lidas:", updateError)
-    return { success: false, error: updateError.message }
-  }
-
-  return { success: true }
 }
 
 
