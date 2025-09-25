@@ -140,7 +140,10 @@ export default async function ProdutosPage({
             );
         })}
       </div>
-      
+
+      {/* A página agora renderiza o componente de filtros, passando os dados necessários */}
+      <FiltrosProdutos categorias={categorias || []} />
+
       <ProdutosList produtos={produtos || []} podeEditar={podeEditar} />
     </div>
   );
