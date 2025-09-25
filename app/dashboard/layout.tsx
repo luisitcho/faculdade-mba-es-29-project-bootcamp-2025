@@ -18,7 +18,12 @@ export default async function DashboardLayout({
   }
 
   // Buscar dados do perfil do usuário
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
+  const { data: profile, error: profileError } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
+  
+  // Debug temporário
+  console.log("User ID:", data.user.id)
+  console.log("Profile data:", profile)
+  console.log("Profile error:", profileError)
 
   return (
     <div className="flex h-screen bg-background">
