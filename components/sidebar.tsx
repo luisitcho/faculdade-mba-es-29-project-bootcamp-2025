@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { LayoutDashboard, Package, Users, TrendingUp, FileText, Settings, LogOut, Menu, X, Bell } from "lucide-react"
 import { NotificationBell } from "@/components/notification-bell"
+import { SidebarUserManagement } from "@/components/sidebar-user-management"
 
 interface SidebarProps {
   user: any
@@ -110,6 +111,11 @@ export function Sidebar({ user, profile }: SidebarProps) {
               )
             })}
           </nav>
+
+          {/* User Management - Only for main admins */}
+          <div className="px-4">
+            <SidebarUserManagement currentUserProfile={profile} />
+          </div>
 
           {/* Logout */}
           <div className="p-4 border-t">
