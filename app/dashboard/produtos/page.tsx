@@ -1,11 +1,20 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Package, AlertTriangle, FileDown } from "lucide-react";
+import {
+  Plus,
+  Package,
+  AlertTriangle,
+  FileDown,
+} from "lucide-react";
 import Link from "next/link";
 import { ProdutosList } from "@/components/produtos-list";
-// [CORREÇÃO] Importa o novo componente de cliente
 import { FiltrosProdutos } from "@/components/filtros-produtos";
 
 interface SearchParams {
@@ -13,15 +22,18 @@ interface SearchParams {
   busca?: string;
 }
 
-// Este componente é e permanece um Componente de Servidor (async)
 export default async function ProdutosPage({
   searchParams,
 }: {
   searchParams: SearchParams;
 }) {
-  const supabase = await createClient();
+  const supabase = createClient();
 
-  const { data: authData, error: authError } = await supabase.auth.getUser();
+  const {
+    data: authData,
+    error: authError,
+  } = await supabase.auth.getUser();
+
   if (authError || !authData?.user) {
     redirect("/auth/login");
   }
@@ -37,12 +49,10 @@ export default async function ProdutosPage({
     .select("*")
     .order("nome");
 
+  // ⚠️ Use relacionamento apenas se estiver configurado corretamente no Supabase
   let query = supabase
     .from("produtos")
-    .select(`
-    *,
-    categorias:categoria_id (id, nome)
-  `)
+    .select("*")
     .eq("ativo", true);
 
   if (searchParams.categoria) {
@@ -58,8 +68,6 @@ export default async function ProdutosPage({
     console.error("Erro ao buscar produtos:", produtosError);
   }
 
-  const { data: produtos } = await query.order("nome");
-
   const totalProdutos = produtos?.length || 0;
   const produtosBaixoEstoque =
     produtos?.filter((p) => p.estoque_atual <= p.estoque_minimo).length || 0;
@@ -70,16 +78,22 @@ export default async function ProdutosPage({
     ) || 0;
 
   const isMainAdmin =
-    profile?.email === "admin@admin.com" && profile?.perfil_acesso === "admin";
+    profile?.email === "admin@admin.com" &&
+    profile?.perfil_acesso === "admin";
+
   const podeEditar =
     isMainAdmin ||
-    ["super_admin", "admin", "operador"].includes(profile?.perfil_acesso || "");
+    ["super_admin", "admin", "operador"].includes(
+      profile?.perfil_acesso || ""
+    );
 
   return (
     <div className="flex-1 space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Gestão de Produtos</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Gestão de Produtos
+          </h1>
           <p className="text-muted-foreground">
             Gerencie o catálogo de produtos por categoria
           </p>
@@ -105,7 +119,9 @@ export default async function ProdutosPage({
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Produtos</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total de Produtos
+            </CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -115,30 +131,44 @@ export default async function ProdutosPage({
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Estoque Baixo</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Estoque Baixo
+            </CardTitle>
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{produtosBaixoEstoque}</div>
-            <p className="text-xs text-muted-foreground">Precisam reposição</p>
+            <div className="text-2xl font-bold text-orange-600">
+              {produtosBaixoEstoque}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Precisam reposição
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Valor Total Estoque</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Valor Total Estoque
+            </CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">R$ {valorTotalEstoque.toFixed(2)}</div>
+            <div className="text-2xl font-bold">
+              R$ {valorTotalEstoque.toFixed(2)}
+            </div>
             <p className="text-xs text-muted-foreground">Valor em estoque</p>
           </CardContent>
         </Card>
         {categorias?.slice(0, 1).map((categoria) => {
-          const produtosCategoria = produtos?.filter((p) => p.categoria_id === categoria.id).length || 0;
+          const produtosCategoria =
+            produtos?.filter((p) => p.categoria_id === categoria.id).length ||
+            0;
           return (
             <Card key={categoria.id}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{categoria.nome}</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  {categoria.nome}
+                </CardTitle>
                 <Package className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -150,9 +180,7 @@ export default async function ProdutosPage({
         })}
       </div>
 
-      {/* A página agora renderiza o componente de filtros, passando os dados necessários */}
       <FiltrosProdutos categorias={categorias || []} />
-
       <ProdutosList produtos={produtos || []} podeEditar={podeEditar} />
     </div>
   );
