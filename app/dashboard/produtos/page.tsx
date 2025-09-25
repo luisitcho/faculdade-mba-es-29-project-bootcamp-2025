@@ -34,17 +34,20 @@ export default async function ProdutosPage({
   // Construir query para produtos
   let query = supabase
     .from("produtos")
-    .select(`
+    .select(
+      `
       *,
       categorias (
         id,
         nome
       )
-    `)
+    `
+    )
     .eq("ativo", true)
 
   // Aplicar filtros
-  if (searchParams.categoria) {
+  // 👇 [MODIFICAÇÃO] Adicionado `&& searchParams.categoria !== "all"` para ignorar o filtro quando "Todas" for selecionado.
+  if (searchParams.categoria && searchParams.categoria !== "all") {
     query = query.eq("categoria_id", searchParams.categoria)
   }
 
@@ -57,7 +60,8 @@ export default async function ProdutosPage({
   // Estatísticas
   const totalProdutos = produtos?.length || 0
   const produtosBaixoEstoque = produtos?.filter((p) => p.estoque_atual <= p.estoque_minimo).length || 0
-  const valorTotalEstoque = produtos?.reduce((total, p) => total + p.estoque_atual * (p.valor_unitario || 0), 0) || 0
+  const valorTotalEstoque =
+    produtos?.reduce((total, p) => total + p.estoque_atual * (p.valor_unitario || 0), 0) || 0
 
   const isMainAdmin = profile?.email === "admin@admin.com" && profile?.perfil_acesso === "admin"
   const podeEditar =
@@ -103,7 +107,6 @@ export default async function ProdutosPage({
             <p className="text-xs text-muted-foreground">Produtos ativos</p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Estoque Baixo</CardTitle>
@@ -114,7 +117,6 @@ export default async function ProdutosPage({
             <p className="text-xs text-muted-foreground">Precisam reposição</p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Valor Total Estoque</CardTitle>
@@ -125,7 +127,6 @@ export default async function ProdutosPage({
             <p className="text-xs text-muted-foreground">Valor em estoque</p>
           </CardContent>
         </Card>
-
         {categorias?.slice(0, 1).map((categoria) => {
           const produtosCategoria = produtos?.filter((p) => p.categoria_id === categoria.id).length || 0
           return (
@@ -150,7 +151,8 @@ export default async function ProdutosPage({
           <CardDescription>Filtre produtos por categoria ou busque por nome</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col gap-4 md:flex-row">
+          {/* 👇 [MODIFICAÇÃO] Envolvido os filtros em um <form> para permitir a submissão. */}
+          <form className="flex flex-col gap-4 md:flex-row md:items-end">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -162,7 +164,8 @@ export default async function ProdutosPage({
                 />
               </div>
             </div>
-            <Select defaultValue={searchParams.categoria || "all"}>
+            {/* 👇 [MODIFICAÇÃO] Adicionado 'name="categoria"' para que o valor seja enviado no formulário. */}
+            <Select name="categoria" defaultValue={searchParams.categoria || "all"}>
               <SelectTrigger className="w-full md:w-[200px]">
                 <SelectValue placeholder="Todas as categorias" />
               </SelectTrigger>
@@ -175,7 +178,12 @@ export default async function ProdutosPage({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+            {/* 👇 [MODIFICAÇÃO] Adicionado um botão para aplicar os filtros. */}
+            <Button type="submit">
+              <Search className="mr-2 h-4 w-4" />
+              Filtrar
+            </Button>
+          </form>
         </CardContent>
       </Card>
 
