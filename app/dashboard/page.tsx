@@ -27,26 +27,28 @@ export default async function DashboardPage() {
 
   const isMainAdmin = (userProfile?.email === "admin@admin.com" || userProfile?.email === "luishenrisc1@gmail.com") && userProfile?.perfil_acesso === "admin"
 
-  // Buscar estatísticas básicas - CORRIGIDO: usando count() corretamente
+  // Buscar estatísticas básicas - ATUALIZADO: seguindo a mesma lógica da página de produtos
   const { count: totalProdutosCount } = await supabase
     .from("produtos")
-    .select("*", { count: "exact" })
+    .select("*", { count: 'exact', head: true })
+    .eq("ativo", true)
 
   const { count: totalUsuariosCount } = await supabase
     .from("profiles")
-    .select("*", { count: "exact" })
+    .select("*", { count: 'exact', head: true })
 
-  // Produtos com estoque baixo (≤ 3) - CORRIGIDO
+  // Produtos com estoque baixo (≤ 3) - ATUALIZADO
   const { count: produtosBaixoEstoqueCount } = await supabase
     .from("produtos")
-    .select("*", { count: "exact" })
+    .select("*", { count: 'exact', head: true })
     .lte("estoque_atual", 3)
+    .eq("ativo", true)
 
-  // Movimentações de hoje
+  // Movimentações de hoje - ATUALIZADO
   const hoje = new Date().toISOString().split("T")[0]
   const { count: movimentacoesHojeCount } = await supabase
     .from("movimentacoes")
-    .select("*", { count: "exact" })
+    .select("*", { count: 'exact', head: true })
     .gte("created_at", `${hoje}T00:00:00`)
     .lt("created_at", `${hoje}T23:59:59`)
 
@@ -63,7 +65,7 @@ export default async function DashboardPage() {
     .order("created_at", { ascending: false })
     .limit(5)
 
-  // Produtos com estoque baixo (≤ 3) - CORRIGIDO
+  // Produtos com estoque baixo (≤ 3) - ATUALIZADO
   const { data: produtosAlerta } = await supabase
     .from("produtos")
     .select(`
@@ -101,7 +103,7 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalProdutosCount || 0}</div>
-            <p className="text-xs text-muted-foreground">Produtos cadastrados</p>
+            <p className="text-xs text-muted-foreground">Produtos ativos</p>
           </CardContent>
         </Card>
 
@@ -119,11 +121,11 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Estoque Baixo (≤ 3)</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+            <AlertTriangle className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">{produtosBaixoEstoqueCount || 0}</div>
-            <p className="text-xs text-muted-foreground">Produtos com estoque baixo</p>
+            <p className="text-xs text-muted-foreground">Precisam reposição urgente</p>
           </CardContent>
         </Card>
 
