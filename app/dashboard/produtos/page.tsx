@@ -1,141 +1,79 @@
-'use client'
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Plus, Package, AlertTriangle, FileDown } from "lucide-react";
+import Link from "next/link";
+import { ProdutosList } from "@/components/produtos-list";
+// [CORREÇÃO] Importa o novo componente de cliente
+import { FiltrosProdutos } from "@/components/filtros-produtos";
 
-import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Search, Package, AlertTriangle, FileDown } from "lucide-react"
-import Link from "next/link"
-import { ProdutosList } from "@/components/produtos-list"
-// [NOVO] Hooks do Next.js para interatividade no cliente
-"use client"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useState } from "react"
-
-// [NOVO] Componente de cliente para os filtros interativos
-function FiltrosProdutos({ categorias }: { categorias: any[] }) {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-
-  // Estados para controlar os valores dos filtros em tempo real
-  const [busca, setBusca] = useState(searchParams.get("busca") || "")
-  const [categoria, setCategoria] = useState(searchParams.get("categoria") || "all")
-
-  // Efeito para aplicar o filtro de busca com debounce (atraso)
-  useEffect(() => {
-    const params = new URLSearchParams(searchParams)
-    // Atraso de 300ms para evitar buscas a cada tecla digitada
-    const timeoutId = setTimeout(() => {
-      if (busca) {
-        params.set("busca", busca)
-      } else {
-        params.delete("busca")
-      }
-      router.replace(`${pathname}?${params.toString()}`)
-    }, 300)
-
-    // Limpa o timeout se o usuário digitar novamente
-    return () => clearTimeout(timeoutId)
-  }, [busca, pathname, router, searchParams])
-
-  // Função para aplicar o filtro de categoria imediatamente
-  const handleCategoriaChange = (novaCategoria: string) => {
-    setCategoria(novaCategoria)
-    const params = new URLSearchParams(searchParams)
-    if (novaCategoria && novaCategoria !== "all") {
-      params.set("categoria", novaCategoria)
-    } else {
-      params.delete("categoria")
-    }
-    router.replace(`${pathname}?${params.toString()}`)
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Filtros</CardTitle>
-        <CardDescription>Filtre produtos por categoria ou busque por nome</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col gap-4 md:flex-row">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar produtos..."
-                className="pl-10"
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-              />
-            </div>
-          </div>
-          <Select value={categoria} onValueChange={handleCategoriaChange}>
-            <SelectTrigger className="w-full md:w-[200px]">
-              <SelectValue placeholder="Todas as categorias" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as categorias</SelectItem>
-              {categorias?.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>
-                  {cat.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </CardContent>
-    </Card>
-  )
+interface SearchParams {
+  categoria?: string;
+  busca?: string;
 }
 
-// [MODIFICADO] Componente de página do servidor ficou mais simples
+// Este componente é e permanece um Componente de Servidor (async)
 export default async function ProdutosPage({
   searchParams,
 }: {
-  searchParams: { categoria?: string; busca?: string }
+  searchParams: SearchParams;
 }) {
-  const supabase = await createClient()
+  const supabase = await createClient();
 
-  const { data: authData, error: authError } = await supabase.auth.getUser()
+  const { data: authData, error: authError } = await supabase.auth.getUser();
   if (authError || !authData?.user) {
-    redirect("/auth/login")
+    redirect("/auth/login");
   }
 
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", authData.user.id).single()
-  const { data: categorias } = await supabase.from("categorias").select("*").order("nome")
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", authData.user.id)
+    .single();
+
+  const { data: categorias } = await supabase
+    .from("categorias")
+    .select("*")
+    .order("nome");
 
   let query = supabase
     .from("produtos")
     .select("*, categorias(id, nome)")
-    .eq("ativo", true)
+    .eq("ativo", true);
 
   if (searchParams.categoria) {
-    query = query.eq("categoria_id", searchParams.categoria)
+    query = query.eq("categoria_id", searchParams.categoria);
   }
   if (searchParams.busca) {
-    query = query.ilike("nome", `%${searchParams.busca}%`)
+    query = query.ilike("nome", `%${searchParams.busca}%`);
   }
 
-  const { data: produtos } = await query.order("nome")
+  const { data: produtos } = await query.order("nome");
 
-  const totalProdutos = produtos?.length || 0
-  const produtosBaixoEstoque = produtos?.filter((p) => p.estoque_atual <= p.estoque_minimo).length || 0
-  const valorTotalEstoque = produtos?.reduce((total, p) => total + p.estoque_atual * (p.valor_unitario || 0), 0) || 0
+  const totalProdutos = produtos?.length || 0;
+  const produtosBaixoEstoque =
+    produtos?.filter((p) => p.estoque_atual <= p.estoque_minimo).length || 0;
+  const valorTotalEstoque =
+    produtos?.reduce(
+      (total, p) => total + p.estoque_atual * (p.valor_unitario || 0),
+      0
+    ) || 0;
 
-  const isMainAdmin = profile?.email === "admin@admin.com" && profile?.perfil_acesso === "admin"
+  const isMainAdmin =
+    profile?.email === "admin@admin.com" && profile?.perfil_acesso === "admin";
   const podeEditar =
     isMainAdmin ||
-    ["super_admin", "admin", "operador"].includes(profile?.perfil_acesso || "")
+    ["super_admin", "admin", "operador"].includes(profile?.perfil_acesso || "");
 
   return (
     <div className="flex-1 space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Gestão de Produtos</h1>
-          <p className="text-muted-foreground">Gerencie o catálogo de produtos por categoria</p>
+          <p className="text-muted-foreground">
+            Gerencie o catálogo de produtos por categoria
+          </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
@@ -157,56 +95,53 @@ export default async function ProdutosPage({
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Produtos</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalProdutos}</div>
-            <p className="text-xs text-muted-foreground">Produtos ativos</p>
-          </CardContent>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total de Produtos</CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">{totalProdutos}</div>
+                <p className="text-xs text-muted-foreground">Produtos ativos</p>
+            </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Estoque Baixo</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{produtosBaixoEstoque}</div>
-            <p className="text-xs text-muted-foreground">Precisam reposição</p>
-          </CardContent>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Estoque Baixo</CardTitle>
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold text-orange-600">{produtosBaixoEstoque}</div>
+                <p className="text-xs text-muted-foreground">Precisam reposição</p>
+            </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Valor Total Estoque</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">R$ {valorTotalEstoque.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">Valor em estoque</p>
-          </CardContent>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Valor Total Estoque</CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">R$ {valorTotalEstoque.toFixed(2)}</div>
+                <p className="text-xs text-muted-foreground">Valor em estoque</p>
+            </CardContent>
         </Card>
         {categorias?.slice(0, 1).map((categoria) => {
-          const produtosCategoria = produtos?.filter((p) => p.categoria_id === categoria.id).length || 0
-          return (
-            <Card key={categoria.id}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{categoria.nome}</CardTitle>
-                <Package className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{produtosCategoria}</div>
-                <p className="text-xs text-muted-foreground">produtos</p>
-              </CardContent>
-            </Card>
-          )
+            const produtosCategoria = produtos?.filter((p) => p.categoria_id === categoria.id).length || 0;
+            return (
+                <Card key={categoria.id}>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">{categoria.nome}</CardTitle>
+                        <Package className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{produtosCategoria}</div>
+                        <p className="text-xs text-muted-foreground">produtos</p>
+                    </CardContent>
+                </Card>
+            );
         })}
       </div>
-
-      {/* A página agora renderiza o novo componente de filtros */}
-      <FiltrosProdutos categorias={categorias || []} />
-
+      
       <ProdutosList produtos={produtos || []} podeEditar={podeEditar} />
     </div>
-  )
+  );
 }
