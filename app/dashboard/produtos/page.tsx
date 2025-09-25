@@ -156,7 +156,11 @@ export default async function ProdutosPage({
   // Estatísticas - CORREÇÃO: Alterado para ≤ 3 itens
   const totalProdutos = produtos?.length || 0
   const produtosBaixoEstoque = produtos?.filter((p) => p.estoque_atual <= 3).length || 0
-  const valorTotalEstoque = produtos?.reduce((total, p) => total + p.estoque_atual * (p.valor_unitario || 0), 0) || 0
+  const valorTotalEstoque = produtos?.reduce((total, p) => total + p.estoque_atual * (p.valor_unitario || 0), 0) || 0;
+  const valorFormatado = new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+}).format(valorTotalEstoque);
 
   const isMainAdmin = profile?.email === "admin@admin.com" && profile?.perfil_acesso === "admin"
   const podeEditar = isMainAdmin ||
@@ -255,7 +259,7 @@ export default async function ProdutosPage({
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">R$ {valorTotalEstoque.toFixed(2)}</div>
+            <div className="text-2xl font-bold">{valorFormatado}</div>
             <p className="text-xs text-muted-foreground">Valor em estoque</p>
           </CardContent>
         </Card>
