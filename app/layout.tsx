@@ -6,7 +6,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Sistema de Estoque',
-  description: 'Created with v0',
+  description: 'Sistema de Estoque desenvolvido com Next.js, TypeScript e Supabase',
   generator: 'v0.app',
 }
 
