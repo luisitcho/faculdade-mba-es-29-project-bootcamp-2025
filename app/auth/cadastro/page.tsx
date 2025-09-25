@@ -63,8 +63,10 @@ export default function CadastroPage() {
     }
 
     try {
+      const finalEmail = email.trim() || `${nome.replace(/\s+/g, "").toLowerCase()}@temp.local`
+
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: finalEmail,
         password,
         options: {
           data: {
@@ -120,12 +122,11 @@ export default function CadastroPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email/Usuário (opcional)</Label>
                 <Input
                   id="email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  required
+                  type="text"
+                  placeholder="admin ou seu@email.com (deixe vazio para usar apenas nome)"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
