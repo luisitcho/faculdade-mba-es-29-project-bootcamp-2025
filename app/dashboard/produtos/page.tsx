@@ -1,10 +1,28 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Search, Package, AlertTriangle, FileDown } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Plus,
+  Search,
+  Package,
+  AlertTriangle,
+  FileDown,
+} from "lucide-react"
 import Link from "next/link"
 import { ProdutosList } from "@/components/produtos-list"
 
@@ -18,35 +36,27 @@ export default async function ProdutosPage({
 }: {
   searchParams: SearchParams
 }) {
-  const supabase = await createClient()
+  const supabase = createClient()
 
-  const { data, error } = await supabase.auth.getUser()
-  if (error || !data?.user) {
+  const { data: authData, error: authError } = await supabase.auth.getUser()
+  if (authError || !authData?.user) {
     redirect("/auth/login")
   }
 
-  // Buscar perfil do usuário
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", authData.user.id)
+    .single()
 
-  // Buscar categorias
-  const { data: categorias } = await supabase.from("categorias").select("*").order("nome")
+  const { data: categorias } = await supabase
+    .from("categorias")
+    .select("*")
+    .order("nome")
 
-  // Construir query para produtos
-  let query = supabase
-    .from("produtos")
-    .select(
-      `
-      *,
-      categorias (
-        id,
-        nome
-      )
-    `
-    )
-    .eq("ativo", true)
+  // ⚠️ Removido o join com categorias para evitar quebra se o relacionamento não estiver configurado
+  let query = supabase.from("produtos").select("*").eq("ativo", true)
 
-  // Aplicar filtros
-  // [CORREÇÃO] Lógica para ignorar o filtro quando "Todas as categorias" é selecionado.
   if (searchParams.categoria && searchParams.categoria !== "all") {
     query = query.eq("categoria_id", searchParams.categoria)
   }
@@ -57,29 +67,35 @@ export default async function ProdutosPage({
 
   const { data: produtos } = await query.order("nome")
 
-  // Estatísticas
   const totalProdutos = produtos?.length || 0
-  const produtosBaixoEstoque = produtos?.filter((p) => p.estoque_atual <= p.estoque_minimo).length || 0
+  const produtosBaixoEstoque =
+    produtos?.filter((p) => p.estoque_atual <= p.estoque_minimo).length || 0
   const valorTotalEstoque =
-    produtos?.reduce((total, p) => total + p.estoque_atual * (p.valor_unitario || 0), 0) || 0
+    produtos?.reduce(
+      (total, p) => total + p.estoque_atual * (p.valor_unitario || 0),
+      0
+    ) || 0
 
-  const isMainAdmin = profile?.email === "admin@admin.com" && profile?.perfil_acesso === "admin"
+  const isMainAdmin =
+    profile?.email === "admin@admin.com" &&
+    profile?.perfil_acesso === "admin"
+
   const podeEditar =
     isMainAdmin ||
-    profile?.perfil_acesso === "super_admin" ||
-    profile?.perfil_acesso === "admin" ||
-    profile?.perfil_acesso === "operador"
-
-  console.log("User Profile in ProdutosPage:", profile)
-  console.log("Pode Editar:", podeEditar)
-  console.log(produtos)
+    ["super_admin", "admin", "operador"].includes(
+      profile?.perfil_acesso || ""
+    )
 
   return (
     <div className="flex-1 space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Gestão de Produtos</h1>
-          <p className="text-muted-foreground">Gerencie o catálogo de produtos por categoria</p>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Gestão de Produtos
+          </h1>
+          <p className="text-muted-foreground">
+            Gerencie o catálogo de produtos por categoria
+          </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
@@ -98,14 +114,16 @@ export default async function ProdutosPage({
           )}
         </div>
       </div>
-      <p>totalProdutos: {totalProdutos}</p>
-      <p>produtosBaixoEstoque: {produtosBaixoEstoque}</p>      
 
-      {/* Estatísticas */}
+      <p>totalProdutos: {totalProdutos}</p>
+      <p>produtosBaixoEstoque: {produtosBaixoEstoque}</p>
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Produtos</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total de Produtos
+            </CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -115,30 +133,44 @@ export default async function ProdutosPage({
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Estoque Baixo</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Estoque Baixo
+            </CardTitle>
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{produtosBaixoEstoque}</div>
-            <p className="text-xs text-muted-foreground">Precisam reposição</p>
+            <div className="text-2xl font-bold text-orange-600">
+              {produtosBaixoEstoque}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Precisam reposição
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Valor Total Estoque</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Valor Total Estoque
+            </CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">R$ {valorTotalEstoque.toFixed(2)}</div>
+            <div className="text-2xl font-bold">
+              R$ {valorTotalEstoque.toFixed(2)}
+            </div>
             <p className="text-xs text-muted-foreground">Valor em estoque</p>
           </CardContent>
         </Card>
         {categorias?.slice(0, 1).map((categoria) => {
-          const produtosCategoria = produtos?.filter((p) => p.categoria_id === categoria.id).length || 0
+          const produtosCategoria =
+            produtos?.filter((p) => p.categoria_id === categoria.id).length ||
+            0
           return (
             <Card key={categoria.id}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{categoria.nome}</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  {categoria.nome}
+                </CardTitle>
                 <Package className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -150,14 +182,14 @@ export default async function ProdutosPage({
         })}
       </div>
 
-      {/* Filtros */}
       <Card>
         <CardHeader>
           <CardTitle>Filtros</CardTitle>
-          <CardDescription>Filtre produtos por categoria ou busque por nome</CardDescription>
+          <CardDescription>
+            Filtre produtos por categoria ou busque por nome
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* [CORREÇÃO] Envolvido os filtros em um <form> para permitir a submissão. */}
           <form className="flex flex-col gap-4 md:flex-row md:items-end">
             <div className="flex-1">
               <div className="relative">
@@ -170,7 +202,10 @@ export default async function ProdutosPage({
                 />
               </div>
             </div>
-            <Select name="categoria" defaultValue={searchParams.categoria || "all"}>
+            <Select
+              name="categoria"
+              defaultValue={searchParams.categoria || "all"}
+            >
               <SelectTrigger className="w-full md:w-[200px]">
                 <SelectValue placeholder="Todas as categorias" />
               </SelectTrigger>
@@ -183,7 +218,6 @@ export default async function ProdutosPage({
                 ))}
               </SelectContent>
             </Select>
-            {/* [CORREÇÃO] Adicionado um botão para aplicar os filtros. */}
             <Button type="submit">
               <Search className="mr-2 h-4 w-4" />
               Filtrar
@@ -192,7 +226,6 @@ export default async function ProdutosPage({
         </CardContent>
       </Card>
 
-      {/* Lista de Produtos */}
       <ProdutosList produtos={produtos || []} podeEditar={podeEditar} />
     </div>
   )
