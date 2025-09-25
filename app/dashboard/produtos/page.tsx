@@ -13,8 +13,6 @@ interface SearchParams {
   busca?: string
 }
 
-console.log('vamooooo')
-
 export default async function ProdutosPage({
   searchParams,
 }: {
@@ -100,6 +98,7 @@ export default async function ProdutosPage({
           )}
         </div>
       </div>
+      <hr />
 
       {/* Estatísticas */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
