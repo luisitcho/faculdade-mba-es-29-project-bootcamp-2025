@@ -75,6 +75,16 @@ Este projeto é um Sistema de Estoque desenvolvido para gerenciar itens por cate
 
 ---
 
+## Credenciais de Teste
+Para acessar o sistema com perfil **Administrador**, utilize as credenciais abaixo:
+
+- **Usuário:** `admin@admin.com`  
+- **Senha:** `admin123`  
+
+Essas credenciais são fornecidas apenas para fins de **demonstração e testes**.
+
+---
+
 ## Autores
 - André Luis Gnatiuc
 - Edimichael das Virgens de Lima
