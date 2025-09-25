@@ -31,16 +31,10 @@ export default async function ProdutosPage({
   // Buscar categorias
   const { data: categorias } = await supabase.from("categorias").select("*").order("nome")
 
-  // CORREÇÃO: Construir query para produtos com join correto
+  // CORREÇÃO: Buscar produtos SEM join primeiro
   let query = supabase
     .from("produtos")
-    .select(`
-      *,
-      categorias!inner (
-        id,
-        nome
-      )
-    `)
+    .select("*")
     .eq("ativo", true)
 
   // Aplicar filtros
@@ -52,39 +46,38 @@ export default async function ProdutosPage({
     query = query.ilike("nome", `%${searchParams.busca}%`)
   }
 
-  // CORREÇÃO: Adicionar tratamento de erro
   const { data: produtos, error: produtosError } = await query.order("nome")
 
   if (produtosError) {
     console.error("Erro ao buscar produtos:", produtosError)
-    
-    // CORREÇÃO: Tentar fallback sem o join se houver erro
-    console.log("Tentando fallback sem join...")
-    
-    let fallbackQuery = supabase
-      .from("produtos")
-      .select("*")
-      .eq("ativo", true)
-
-    if (searchParams.categoria && searchParams.categoria !== "all") {
-      fallbackQuery = fallbackQuery.eq("categoria_id", searchParams.categoria)
-    }
-
-    if (searchParams.busca) {
-      fallbackQuery = fallbackQuery.ilike("nome", `%${searchParams.busca}%`)
-    }
-
-    const { data: produtosFallback, error: fallbackError } = await fallbackQuery.order("nome")
-    
-    if (fallbackError) {
-      console.error("Erro no fallback:", fallbackError)
-    } else {
-      console.log("Fallback bem-sucedido, produtos encontrados:", produtosFallback?.length)
-    }
   }
 
-  console.log("Produtos carregados:", produtos?.length)
-  console.log("Primeiro produto:", produtos?.[0])
+  console.log("Produtos encontrados (sem join):", produtos?.length)
+  console.log("Produtos dados:", produtos)
+
+  // CORREÇÃO: Buscar nomes das categorias separadamente
+  const produtosComCategorias = produtos ? await Promise.all(
+    produtos.map(async (produto) => {
+      if (produto.categoria_id) {
+        const { data: categoria } = await supabase
+          .from("categorias")
+          .select("nome")
+          .eq("id", produto.categoria_id)
+          .single()
+        
+        return {
+          ...produto,
+          categorias: categoria ? { id: produto.categoria_id, nome: categoria.nome } : null
+        }
+      }
+      return {
+        ...produto,
+        categorias: null
+      }
+    })
+  ) : []
+
+  console.log("Produtos com categorias:", produtosComCategorias)
 
   // Estatísticas
   const totalProdutos = produtos?.length || 0
@@ -97,15 +90,13 @@ export default async function ProdutosPage({
     profile?.perfil_acesso === "admin" ||
     profile?.perfil_acesso === "operador"
 
-  // CORREÇÃO: Teste simples para verificar se há produtos
-  const { data: testeProdutos, error: testeError } = await supabase
+  // Teste adicional: contar todos os produtos
+  const { count: totalProdutosCount } = await supabase
     .from("produtos")
-    .select("id")
+    .select("*", { count: 'exact', head: true })
     .eq("ativo", true)
-    .limit(1)
 
-  console.log("Teste simples - Produtos ativos existem?", testeProdutos?.length > 0)
-  console.log("Erro no teste:", testeError)
+  console.log("Total de produtos no banco:", totalProdutosCount)
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -135,9 +126,17 @@ export default async function ProdutosPage({
       {/* Debug info */}
       <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
         <p className="text-sm">
-          <strong>Debug Info:</strong> Total de produtos encontrados: {totalProdutos} | 
-          Teste simples: {testeProdutos?.length || 0} produto(s) ativo(s)
+          <strong>Debug Info:</strong> 
+          Produtos encontrados: {totalProdutos} | 
+          Total no banco: {totalProdutosCount} |
+          Com categorias: {produtosComCategorias.length}
         </p>
+        {produtos && produtos.length > 0 && (
+          <div className="mt-2 text-xs">
+            <p>Primeiros produtos:</p>
+            <pre>{JSON.stringify(produtos.slice(0, 2), null, 2)}</pre>
+          </div>
+        )}
       </div>
 
       {/* Estatísticas */}
@@ -229,8 +228,8 @@ export default async function ProdutosPage({
         </CardContent>
       </Card>
 
-      {/* Lista de Produtos */}
-      <ProdutosList produtos={produtos || []} podeEditar={podeEditar} />
+      {/* Lista de Produtos - CORREÇÃO: passar produtosComCategorias */}
+      <ProdutosList produtos={produtosComCategorias} podeEditar={podeEditar} />
     </div>
   )
 }
