@@ -45,6 +45,7 @@ export default async function UsuariosPage({
   let query = supabase.from("profiles").select("*")
 
   if (searchParams.busca) {
+    // A maneira correta de usar .or() para pesquisa com ILIKE
     query = query.or(
       `nome.ilike.%${searchParams.busca}%,email.ilike.%${searchParams.busca}%`
     )
