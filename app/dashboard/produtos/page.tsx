@@ -74,6 +74,9 @@ export default async function ProdutosPage({
   console.log("Pode Editar:", podeEditar)
   console.log(produtos)
 
+  console.log(produtos)
+  console.log("Produtos carregados:", JSON.stringify(produtos, null, 2))
+
   return (
     <div className="flex-1 space-y-6 p-6">
       <div className="flex items-center justify-between">
