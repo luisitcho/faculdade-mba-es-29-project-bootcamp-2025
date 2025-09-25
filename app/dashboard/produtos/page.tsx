@@ -13,6 +13,8 @@ interface SearchParams {
   busca?: string
 }
 
+console.log('vamooooo')
+
 export default async function ProdutosPage({
   searchParams,
 }: {
