@@ -223,7 +223,10 @@ export function ProdutosList({ produtos, podeEditar }: ProdutosListProps) {
               <div className="text-sm">
                 <p className="text-muted-foreground">Valor Unitário</p>
                 <p className="font-medium">
-                  {produto.valor_unitario ? `R$ ${produto.valor_unitario.toFixed(2)}` : "Não informado"}
+                  {produto.valor_unitario
+                    ? `${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(produto.valor_unitario)}`
+                    : "Não informado"}
+
                 </p>
               </div>
               {podeEditar && (

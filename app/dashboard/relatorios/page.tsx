@@ -27,6 +27,9 @@ export default async function RelatoriosPage({
     redirect("/auth/login")
   }
 
+  // Buscar perfil do usuário
+  const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
+
   // Buscar dados para relatórios
   const { data: produtos } = await supabase
     .from("produtos")
@@ -62,13 +65,25 @@ export default async function RelatoriosPage({
     .lte("created_at", fimMes)
     .order("created_at", { ascending: false })
 
-  // Estatísticas gerais
+  // Estatísticas gerais - ATUALIZADO: Alterado para ≤ 3 itens e formatação de moeda
   const totalProdutos = produtos?.length || 0
-  const produtosBaixoEstoque = produtos?.filter((p) => p.estoque_atual <= p.estoque_minimo).length || 0
+  const produtosBaixoEstoque = produtos?.filter((p) => p.estoque_atual <= 3).length || 0
   const valorTotalEstoque = produtos?.reduce((acc, p) => acc + p.estoque_atual * (p.valor_unitario || 0), 0) || 0
+  const valorFormatado = new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(valorTotalEstoque)
 
   const entradasMes = movimentacoes?.filter((m) => m.tipo_movimentacao === "entrada").length || 0
   const saidasMes = movimentacoes?.filter((m) => m.tipo_movimentacao === "saida").length || 0
+
+  // Buscar notificações não lidas para mostrar badge
+  const { data: notificacoesNaoLidas, count: totalNotificacoes } = await supabase
+    .from("notificacoes")
+    .select("*", { count: 'exact' })
+    .eq("usuario_id", data.user.id)
+    .eq("lida", false)
+    .order("created_at", { ascending: false })
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -80,7 +95,7 @@ export default async function RelatoriosPage({
         <ExportarRelatoriosButton produtos={produtos || []} movimentacoes={movimentacoes || []} />
       </div>
 
-      {/* Resumo Executivo */}
+      {/* Resumo Executivo - ATUALIZADO: Alterado para ≤ 3 itens e formatação de moeda */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -95,12 +110,12 @@ export default async function RelatoriosPage({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Estoque Baixo</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Estoque Baixo (≤ 3)</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">{produtosBaixoEstoque}</div>
-            <p className="text-xs text-muted-foreground">Precisam reposição</p>
+            <p className="text-xs text-muted-foreground">Precisam reposição urgente</p>
           </CardContent>
         </Card>
 
@@ -110,7 +125,7 @@ export default async function RelatoriosPage({
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">R$ {valorTotalEstoque.toFixed(2)}</div>
+            <div className="text-2xl font-bold">{valorFormatado}</div>
             <p className="text-xs text-muted-foreground">Valor total em estoque</p>
           </CardContent>
         </Card>
