@@ -17,13 +17,22 @@ export default async function DashboardLayout({
     redirect("/auth/login")
   }
 
-  // Buscar dados do perfil do usuário
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
+  // Buscar dados do perfil do usuário com cache busting
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", data.user.id)
+    .single()
   
   // Debug temporário
-  console.log("Raw profile from DB:", profile)
+  console.log("=== DEBUG PROFILE ===")
   console.log("User ID:", data.user.id)
   console.log("User email:", data.user.email)
+  console.log("Profile error:", profileError)
+  console.log("Raw profile from DB:", profile)
+  console.log("Profile is null?", profile === null)
+  console.log("Profile is undefined?", profile === undefined)
+  console.log("===================")
   
   // Fallback se não encontrar perfil
   const userProfile = profile || {
@@ -36,6 +45,8 @@ export default async function DashboardLayout({
   
   // Debug do perfil final
   console.log("Final userProfile:", userProfile)
+  console.log("Perfil acesso:", userProfile?.perfil_acesso)
+  console.log("Nome:", userProfile?.nome)
 
   return (
     <div className="flex h-screen bg-background">
