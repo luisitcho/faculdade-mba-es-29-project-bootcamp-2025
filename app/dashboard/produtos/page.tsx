@@ -2,9 +2,19 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Package, AlertTriangle, FileDown } from "lucide-react";
+import {
+  Plus,
+  Package,
+  AlertTriangle,
+  FileDown,
+} from "lucide-react";
 import Link from "next/link";
 import { ProdutosList } from "@/components/produtos-list";
 import { FiltrosProdutos } from "@/components/filtros-produtos";
@@ -19,62 +29,88 @@ export default async function ProdutosPage({
 }: {
   searchParams: SearchParams;
 }) {
-  // [CORREÇÃO] A função createClient não é assíncrona, então não precisa de 'await'
   const supabase = createClient();
 
-  const { data: { user }, } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError) {
+    console.error("Erro ao obter usuário:", userError.message);
+  }
+
   if (!user) {
     return redirect("/auth/login");
   }
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", user.id)
     .single();
 
-  const { data: categorias } = await supabase
+  if (profileError) {
+    console.error("Erro ao obter perfil:", profileError.message);
+  }
+
+  const { data: categorias, error: categoriasError } = await supabase
     .from("categorias")
     .select("*")
     .order("nome");
 
+  if (categoriasError) {
+    console.error("Erro ao obter categorias:", categoriasError.message);
+  }
+
   let query = supabase
     .from("produtos")
-    .select(`*`) // Sintaxe mais segura se a relação estiver configurada
+    .select("*")
     .eq("ativo", true);
 
-  if (searchParams.categoria) {
+  if (searchParams?.categoria) {
     query = query.eq("categoria_id", searchParams.categoria);
   }
-  if (searchParams.busca) {
+
+  if (searchParams?.busca) {
     query = query.ilike("nome", `%${searchParams.busca}%`);
   }
 
   const { data: produtos, error: produtosError } = await query.order("nome");
+
   if (produtosError) {
-    console.error("Supabase error fetching produtos:", produtosError.message);
+    console.error("Erro ao obter produtos:", produtosError.message);
   }
 
-  const totalProdutos = produtos?.length || 0;
+  const totalProdutos = produtos?.length ?? 0;
   const produtosBaixoEstoque =
-    produtos?.filter((p) => p.estoque_atual <= p.estoque_minimo).length || 0;
+    produtos?.filter(
+      (p) => p.estoque_atual <= p.estoque_minimo
+    ).length ?? 0;
   const valorTotalEstoque =
     produtos?.reduce(
-      (total, p) => total + p.estoque_atual * (p.valor_unitario || 0),
+      (total, p) =>
+        total + (p.estoque_atual ?? 0) * (p.valor_unitario ?? 0),
       0
-    ) || 0;
+    ) ?? 0;
 
   const isMainAdmin =
-    profile?.email === "admin@admin.com" && profile?.perfil_acesso === "admin";
+    profile?.email === "admin@admin.com" &&
+    profile?.perfil_acesso === "admin";
+
   const podeEditar =
     isMainAdmin ||
-    ["super_admin", "admin", "operador"].includes(profile?.perfil_acesso || "");
+    ["super_admin", "admin", "operador"].includes(
+      profile?.perfil_acesso ?? ""
+    );
 
   return (
     <div className="flex-1 space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Gestão de Produtos</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Gestão de Produtos
+          </h1>
           <p className="text-muted-foreground">
             Gerencie o catálogo de produtos por categoria
           </p>
@@ -98,42 +134,57 @@ export default async function ProdutosPage({
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {/* Cards de estatísticas... */}
         <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total de Produtos</CardTitle>
-                <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">{totalProdutos}</div>
-                <p className="text-xs text-muted-foreground">Produtos ativos</p>
-            </CardContent>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total de Produtos
+            </CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalProdutos}</div>
+            <p className="text-xs text-muted-foreground">
+              Produtos ativos
+            </p>
+          </CardContent>
         </Card>
         <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Estoque Baixo</CardTitle>
-                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold text-orange-600">{produtosBaixoEstoque}</div>
-                <p className="text-xs text-muted-foreground">Precisam reposição</p>
-            </CardContent>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Estoque Baixo
+            </CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">
+              {produtosBaixoEstoque}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Precisam reposição
+            </p>
+          </CardContent>
         </Card>
         <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Valor Total Estoque</CardTitle>
-                <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">R$ {valorTotalEstoque.toFixed(2)}</div>
-                <p className="text-xs text-muted-foreground">Valor em estoque</p>
-            </CardContent>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Valor Total Estoque
+            </CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              R$ {valorTotalEstoque.toFixed(2)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Valor em estoque
+            </p>
+          </CardContent>
         </Card>
       </div>
 
-      <FiltrosProdutos categorias={categorias || []} />
+      <FiltrosProdutos categorias={categorias ?? []} />
 
-      <ProdutosList produtos={produtos || []} podeEditar={podeEditar} />
+      <ProdutosList produtos={produtos ?? []} podeEditar={podeEditar} />
     </div>
   );
 }
