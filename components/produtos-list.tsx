@@ -119,6 +119,8 @@ export function ProdutosList({ produtos, podeEditar }: ProdutosListProps) {
     }
   }
 
+  console.log("Produtos recebidos:", produtos)
+
   if (!produtos.length) {
     return (
       <Card>

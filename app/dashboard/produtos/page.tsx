@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Search, Package, AlertTriangle, FileDown, XCircle } from "lucide-react"
+import { Plus, Search, Package, AlertTriangle, FileDown } from "lucide-react"
 import Link from "next/link"
 import { ProdutosList } from "@/components/produtos-list"
 
@@ -34,19 +34,17 @@ export default async function ProdutosPage({
   // Construir query para produtos
   let query = supabase
     .from("produtos")
-    .select(
-      `
-      id, nome, descricao, unidade_medida, estoque_minimo, estoque_atual, valor_unitario, categoria_id,
+    .select(`
+      *,
       categorias (
         id,
         nome
       )
-    `
-    )
+    `)
     .eq("ativo", true)
 
   // Aplicar filtros
-  if (searchParams.categoria && searchParams.categoria !== "all") {
+  if (searchParams.categoria) {
     query = query.eq("categoria_id", searchParams.categoria)
   }
 
@@ -67,14 +65,6 @@ export default async function ProdutosPage({
     profile?.perfil_acesso === "super_admin" ||
     profile?.perfil_acesso === "admin" ||
     profile?.perfil_acesso === "operador"
-
-  // Função para criar a URL com base nos filtros
-  const createFilterUrl = (params: SearchParams) => {
-    const search = new URLSearchParams()
-    if (params.busca) search.set("busca", params.busca)
-    if (params.categoria && params.categoria !== "all") search.set("categoria", params.categoria)
-    return `/dashboard/produtos?${search.toString()}`
-  }
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -121,7 +111,7 @@ export default async function ProdutosPage({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">{produtosBaixoEstoque}</div>
-            <p className="text-xs text-muted-foreground">Precisam de reposição</p>
+            <p className="text-xs text-muted-foreground">Precisam reposição</p>
           </CardContent>
         </Card>
 
@@ -160,7 +150,7 @@ export default async function ProdutosPage({
           <CardDescription>Filtre produtos por categoria ou busque por nome</CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="flex flex-col gap-4 md:flex-row" method="get">
+          <div className="flex flex-col gap-4 md:flex-row">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -172,10 +162,7 @@ export default async function ProdutosPage({
                 />
               </div>
             </div>
-            <Select
-              defaultValue={searchParams.categoria || "all"}
-              name="categoria"
-            >
+            <Select defaultValue={searchParams.categoria || "all"}>
               <SelectTrigger className="w-full md:w-[200px]">
                 <SelectValue placeholder="Todas as categorias" />
               </SelectTrigger>
@@ -188,14 +175,7 @@ export default async function ProdutosPage({
                 ))}
               </SelectContent>
             </Select>
-            <Button type="submit">Aplicar Filtros</Button>
-            <Button type="button" variant="ghost" asChild>
-              <Link href="/dashboard/produtos">
-                <XCircle className="h-4 w-4 mr-2" />
-                Limpar Filtros
-              </Link>
-            </Button>
-          </form>
+          </div>
         </CardContent>
       </Card>
 
