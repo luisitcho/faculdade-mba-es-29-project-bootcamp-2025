@@ -71,8 +71,6 @@ export default async function DashboardPage() {
     .eq("ativo", true)
     .limit(5)
 
-    console.log(totalProdutos)
-
   return (
     <div className="flex-1 space-y-6 p-6">
       <div className="flex items-center justify-between">
