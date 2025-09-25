@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Plus, Package, AlertTriangle, FileDown } from "lucide-react";
 import Link from "next/link";
 import { ProdutosList } from "@/components/produtos-list";
-// [CORREÇÃO] Importa o novo componente de cliente
 import { FiltrosProdutos } from "@/components/filtros-produtos";
 
 interface SearchParams {
@@ -13,7 +12,6 @@ interface SearchParams {
   busca?: string;
 }
 
-// Este componente é e permanece um Componente de Servidor (async)
 export default async function ProdutosPage({
   searchParams,
 }: {
@@ -37,9 +35,13 @@ export default async function ProdutosPage({
     .select("*")
     .order("nome");
 
+  // Ajuste da query para trazer categoria corretamente
   let query = supabase
     .from("produtos")
-    .select("*, categorias(id, nome)")
+    .select(`
+      *,
+      categorias:categoria_id (id, nome)
+    `)
     .eq("ativo", true);
 
   if (searchParams.categoria) {
@@ -49,7 +51,11 @@ export default async function ProdutosPage({
     query = query.ilike("nome", `%${searchParams.busca}%`);
   }
 
-  const { data: produtos } = await query.order("nome");
+  // Busca produtos
+  const { data: produtos, error: produtosError } = await query.order("nome");
+  if (produtosError) {
+    console.error("Erro ao buscar produtos:", produtosError);
+  }
 
   const totalProdutos = produtos?.length || 0;
   const produtosBaixoEstoque =
@@ -95,53 +101,54 @@ export default async function ProdutosPage({
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total de Produtos</CardTitle>
-                <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">{totalProdutos}</div>
-                <p className="text-xs text-muted-foreground">Produtos ativos</p>
-            </CardContent>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Produtos</CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalProdutos}</div>
+            <p className="text-xs text-muted-foreground">Produtos ativos</p>
+          </CardContent>
         </Card>
         <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Estoque Baixo</CardTitle>
-                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold text-orange-600">{produtosBaixoEstoque}</div>
-                <p className="text-xs text-muted-foreground">Precisam reposição</p>
-            </CardContent>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Estoque Baixo</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">{produtosBaixoEstoque}</div>
+            <p className="text-xs text-muted-foreground">Precisam reposição</p>
+          </CardContent>
         </Card>
         <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Valor Total Estoque</CardTitle>
-                <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">R$ {valorTotalEstoque.toFixed(2)}</div>
-                <p className="text-xs text-muted-foreground">Valor em estoque</p>
-            </CardContent>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Valor Total Estoque</CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">R$ {valorTotalEstoque.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">Valor em estoque</p>
+          </CardContent>
         </Card>
         {categorias?.slice(0, 1).map((categoria) => {
-            const produtosCategoria = produtos?.filter((p) => p.categoria_id === categoria.id).length || 0;
-            return (
-                <Card key={categoria.id}>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">{categoria.nome}</CardTitle>
-                        <Package className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{produtosCategoria}</div>
-                        <p className="text-xs text-muted-foreground">produtos</p>
-                    </CardContent>
-                </Card>
-            );
+          const produtosCategoria = produtos?.filter(
+            (p) => p.categoria_id === categoria.id
+          ).length || 0;
+          return (
+            <Card key={categoria.id}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{categoria.nome}</CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{produtosCategoria}</div>
+                <p className="text-xs text-muted-foreground">produtos</p>
+              </CardContent>
+            </Card>
+          );
         })}
       </div>
 
-      {/* A página agora renderiza o componente de filtros, passando os dados necessários */}
       <FiltrosProdutos categorias={categorias || []} />
 
       <ProdutosList produtos={produtos || []} podeEditar={podeEditar} />
