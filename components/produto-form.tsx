@@ -46,11 +46,13 @@ export function ProdutoForm({ categorias, produto }: ProdutoFormProps) {
       const produtoData = {
         nome,
         descricao,
-        categoria_id: categoriaId,
+        categoria_id: categoriaId || null, // evita enviar string vazia
         unidade_medida: unidadeMedida,
-        estoque_minimo: Number.parseInt(estoqueMinimo),
-        estoque_atual: Number.parseInt(estoqueAtual),
-        valor_unitario: valorUnitario ? Number.parseFloat(valorUnitario) : null,
+        estoque_minimo: Number.isNaN(Number.parseInt(estoqueMinimo)) ? 0 : Number.parseInt(estoqueMinimo),
+        estoque_atual: Number.isNaN(Number.parseInt(estoqueAtual)) ? 0 : Number.parseInt(estoqueAtual),
+        valor_unitario: valorUnitario && !Number.isNaN(Number.parseFloat(valorUnitario))
+          ? Number.parseFloat(valorUnitario)
+          : null,
       }
 
       let result
@@ -62,11 +64,15 @@ export function ProdutoForm({ categorias, produto }: ProdutoFormProps) {
         result = await supabase.from("produtos").insert([produtoData])
       }
 
-      if (result.error) throw result.error
+      if (result.error) {
+        console.error("Erro Supabase:", result.error) // log completo
+        throw result.error
+      }
 
       router.push("/dashboard/produtos")
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "Erro ao salvar produto")
+    } catch (error: any) {
+      console.error("Erro ao salvar produto:", error)
+      setError(error.message || "Erro ao salvar produto")
     } finally {
       setIsLoading(false)
     }
