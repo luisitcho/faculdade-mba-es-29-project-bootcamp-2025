@@ -53,7 +53,14 @@ export function SidebarUserManagement({ currentUserProfile }: SidebarUserManagem
       return
     }
 
-    setUsuarios(data || [])
+    // Garantir que os nomes não sejam nulos ou vazios
+    const usuariosComNomes = (data || []).map(usuario => ({
+      ...usuario,
+      nome: usuario.nome || 'Usuário',
+      email: usuario.email || 'email@exemplo.com'
+    }))
+
+    setUsuarios(usuariosComNomes)
   }
 
   const canEditUser = (usuario: Usuario) => {
