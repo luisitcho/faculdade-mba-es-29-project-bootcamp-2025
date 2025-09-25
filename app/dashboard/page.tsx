@@ -214,26 +214,34 @@ export default async function DashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button asChild variant="outline" className="h-20 flex-col bg-transparent">
+            {(isMainAdmin || profile?.perfil_acesso === "admin" || profile?.perfil_acesso === "operador") && (
+              <Button asChild variant="default" className="h-20 flex-col cursor-pointer">
+                <Link href="/dashboard/produtos/novo">
+                  <Package className="h-6 w-6 mb-2" />
+                  Cadastrar Produto
+                </Link>
+              </Button>
+            )}
+            <Button asChild variant="outline" className="h-20 flex-col bg-transparent cursor-pointer">
               <Link href="/dashboard/produtos">
                 <Package className="h-6 w-6 mb-2" />
                 Gerenciar Produtos
               </Link>
             </Button>
-            <Button asChild variant="outline" className="h-20 flex-col bg-transparent">
+            <Button asChild variant="outline" className="h-20 flex-col bg-transparent cursor-pointer">
               <Link href="/dashboard/movimentacoes">
                 <TrendingUp className="h-6 w-6 mb-2" />
                 Nova Movimentação
               </Link>
             </Button>
-            <Button asChild variant="outline" className="h-20 flex-col bg-transparent">
+            <Button asChild variant="outline" className="h-20 flex-col bg-transparent cursor-pointer">
               <Link href="/dashboard/relatorios">
                 <Calendar className="h-6 w-6 mb-2" />
                 Relatórios
               </Link>
             </Button>
             {isMainAdmin && (
-              <Button asChild variant="outline" className="h-20 flex-col bg-transparent">
+              <Button asChild variant="outline" className="h-20 flex-col bg-transparent cursor-pointer">
                 <Link href="/dashboard/usuarios">
                   <Users className="h-6 w-6 mb-2" />
                   Gerenciar Usuários

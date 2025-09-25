@@ -182,11 +182,11 @@ export function ProdutoForm({ categorias, produto }: ProdutoFormProps) {
             {error && <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">{error}</div>}
 
             <div className="flex gap-3 pt-4">
-              <Button type="submit" disabled={isLoading} className="flex-1">
+              <Button type="submit" disabled={isLoading} className="flex-1 cursor-pointer">
                 <Save className="mr-2 h-4 w-4" />
                 {isLoading ? "Salvando..." : produto ? "Atualizar Produto" : "Cadastrar Produto"}
               </Button>
-              <Button type="button" variant="outline" asChild>
+              <Button type="button" variant="outline" asChild className="cursor-pointer bg-transparent">
                 <Link href="/dashboard/produtos">Cancelar</Link>
               </Button>
             </div>

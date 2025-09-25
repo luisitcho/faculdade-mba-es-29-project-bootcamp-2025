@@ -136,48 +136,50 @@ export default async function RelatoriosPage({
           <CardDescription>Personalize os relatórios selecionando os filtros desejados</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Select defaultValue={searchParams.tipo || "estoque"}>
-              <SelectTrigger>
-                <SelectValue placeholder="Tipo de relatório" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="estoque">Relatório de Estoque</SelectItem>
-                <SelectItem value="movimentacoes">Relatório de Movimentações</SelectItem>
-                <SelectItem value="categorias">Relatório por Categoria</SelectItem>
-                <SelectItem value="usuarios">Relatório por Usuário</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select defaultValue={searchParams.periodo || "mes"}>
-              <SelectTrigger>
-                <SelectValue placeholder="Período" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="hoje">Hoje</SelectItem>
-                <SelectItem value="semana">Esta Semana</SelectItem>
-                <SelectItem value="mes">Este Mês</SelectItem>
-                <SelectItem value="trimestre">Este Trimestre</SelectItem>
-                <SelectItem value="ano">Este Ano</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select defaultValue={searchParams.categoria || "all"}>
-              <SelectTrigger>
-                <SelectValue placeholder="Categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as Categorias</SelectItem>
-                {categorias?.map((categoria) => (
-                  <SelectItem key={categoria.id} value={categoria.id}>
-                    {categoria.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button className="w-full">
-              <FileText className="mr-2 h-4 w-4" />
-              Gerar Relatório
-            </Button>
-          </div>
+          <form action="/dashboard/relatorios" method="get">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Select name="tipo" defaultValue={searchParams.tipo || "estoque"}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Tipo de relatório" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="estoque">Relatório de Estoque</SelectItem>
+                  <SelectItem value="movimentacoes">Relatório de Movimentações</SelectItem>
+                  <SelectItem value="categorias">Relatório por Categoria</SelectItem>
+                  <SelectItem value="usuarios">Relatório por Usuário</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select name="periodo" defaultValue={searchParams.periodo || "mes"}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Período" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="hoje">Hoje</SelectItem>
+                  <SelectItem value="semana">Esta Semana</SelectItem>
+                  <SelectItem value="mes">Este Mês</SelectItem>
+                  <SelectItem value="trimestre">Este Trimestre</SelectItem>
+                  <SelectItem value="ano">Este Ano</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select name="categoria" defaultValue={searchParams.categoria || "all"}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as Categorias</SelectItem>
+                  {categorias?.map((categoria) => (
+                    <SelectItem key={categoria.id} value={categoria.id}>
+                      {categoria.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button type="submit" className="w-full cursor-pointer">
+                <FileText className="mr-2 h-4 w-4" />
+                Gerar Relatório
+              </Button>
+            </div>
+          </form>
         </CardContent>
       </Card>
 
