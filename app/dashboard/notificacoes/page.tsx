@@ -31,29 +31,30 @@ async function marcarComoLida(id: string) {
 // Ação do servidor para marcar TODAS como lidas
 async function marcarTodasComoLidas() {
   "use server"
-  
+
   const supabase = await createClient()
-  
-  // Primeiro precisamos do ID do usuário
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: "Usuário não autenticado" }
 
-  const { error } = await supabase
+  const { data, error } = await supabase.auth.getUser()
+  if (error || !data?.user) {
+    return { success: false, error: "Usuário não autenticado" }
+  }
+
+  const { error: updateError } = await supabase
     .from("notificacoes")
-    .update({ 
-      lida: true, 
-      updated_at: new Date().toISOString() 
+    .update({
+      lida: true,
+      updated_at: new Date().toISOString(),
     })
-    .eq("usuario_id", user.id)
-    .eq("lida", false)
+    .eq("usuario_id", data.user.id)
 
-  if (error) {
-    console.error("Erro ao marcar todas como lidas:", error)
-    return { success: false, error: error.message }
+  if (updateError) {
+    console.error("Erro ao marcar todas como lidas:", updateError)
+    return { success: false, error: updateError.message }
   }
 
   return { success: true }
 }
+
 
 export default async function NotificacoesPage() {
   const supabase = await createClient()
