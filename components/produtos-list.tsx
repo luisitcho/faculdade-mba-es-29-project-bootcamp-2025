@@ -156,7 +156,9 @@ export function ProdutosList({ produtos, podeEditar }: ProdutosListProps) {
                 {estoqueBaixo && <AlertTriangle className="h-5 w-5 text-orange-500 flex-shrink-0 ml-2" />}
               </div>
               <div className="flex gap-2">
-                <Badge className={getCategoriaColor(produto.categorias.nome)}>{produto.categorias.nome}</Badge>
+                <Badge className={getCategoriaColor(produto.categorias?.nome || "")}>
+                  {produto.categorias?.nome || "Sem Categoria"}
+                </Badge>
                 <Badge className={estoqueStatus.color}>{estoqueStatus.text}</Badge>
               </div>
             </CardHeader>
