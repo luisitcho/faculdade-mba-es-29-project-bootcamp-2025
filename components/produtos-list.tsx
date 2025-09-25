@@ -79,13 +79,10 @@ export function ProdutosList({ produtos, podeEditar }: ProdutosListProps) {
   const handleSalvarEstoque = async (produtoId: string) => {
     const supabase = createClient()
     setIsLoading(true)
-
     const estoqueValue = Number.parseInt(novoEstoque)
 
-    // ⚠️ Adição de validação: Verifica se o valor é um número válido e não negativo
     if (Number.isNaN(estoqueValue) || estoqueValue < 0) {
       console.error("Estoque inválido. Deve ser um número inteiro não negativo.")
-      // Você pode adicionar um toast/alerta de erro aqui para o usuário
       setIsLoading(false)
       return
     }
@@ -93,11 +90,9 @@ export function ProdutosList({ produtos, podeEditar }: ProdutosListProps) {
     try {
       const { error } = await supabase
         .from("produtos")
-        .update({ estoque_atual: estoqueValue }) // Usa o valor validado
+        .update({ estoque_atual: estoqueValue })
         .eq("id", produtoId)
-
       if (error) throw error
-
       setEditandoEstoque(null)
       router.refresh()
     } catch (error) {
@@ -115,13 +110,9 @@ export function ProdutosList({ produtos, podeEditar }: ProdutosListProps) {
   const handleRemoverProduto = async (produtoId: string) => {
     const supabase = createClient()
     setIsLoading(true)
-
     try {
-      // Nota: Esta abordagem de "remoção" (ativo: false) é boa para manter o histórico.
       const { error } = await supabase.from("produtos").update({ ativo: false }).eq("id", produtoId)
-
       if (error) throw error
-
       router.refresh()
     } catch (error) {
       console.error("Erro ao remover produto:", error)
@@ -155,8 +146,6 @@ export function ProdutosList({ produtos, podeEditar }: ProdutosListProps) {
       {produtos.map((produto) => {
         const estoqueStatus = getEstoqueStatus(produto.estoque_atual, produto.estoque_minimo)
         const estoqueBaixo = produto.estoque_atual <= produto.estoque_minimo
-
-        // Variável auxiliar para desabilitar o botão de salvar estoque (UX aprimorada)
         const isSaveDisabled =
           isLoading ||
           novoEstoque === "" ||
@@ -198,7 +187,7 @@ export function ProdutosList({ produtos, podeEditar }: ProdutosListProps) {
                         variant="ghost"
                         className="h-8 w-8 p-0"
                         onClick={() => handleSalvarEstoque(produto.id)}
-                        disabled={isSaveDisabled} // Aplica a validação aprimorada
+                        disabled={isSaveDisabled}
                       >
                         <Save className="h-3 w-3" />
                       </Button>

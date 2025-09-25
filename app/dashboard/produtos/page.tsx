@@ -7,74 +7,126 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Search, Package, AlertTriangle, FileDown } from "lucide-react"
 import Link from "next/link"
 import { ProdutosList } from "@/components/produtos-list"
+// [NOVO] Hooks do Next.js para interatividade no cliente
+"use client"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useEffect, useState } from "react"
 
-interface SearchParams {
-  categoria?: string
-  busca?: string
+// [NOVO] Componente de cliente para os filtros interativos
+function FiltrosProdutos({ categorias }: { categorias: any[] }) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  // Estados para controlar os valores dos filtros em tempo real
+  const [busca, setBusca] = useState(searchParams.get("busca") || "")
+  const [categoria, setCategoria] = useState(searchParams.get("categoria") || "all")
+
+  // Efeito para aplicar o filtro de busca com debounce (atraso)
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams)
+    // Atraso de 300ms para evitar buscas a cada tecla digitada
+    const timeoutId = setTimeout(() => {
+      if (busca) {
+        params.set("busca", busca)
+      } else {
+        params.delete("busca")
+      }
+      router.replace(`${pathname}?${params.toString()}`)
+    }, 300)
+
+    // Limpa o timeout se o usuário digitar novamente
+    return () => clearTimeout(timeoutId)
+  }, [busca, pathname, router, searchParams])
+
+  // Função para aplicar o filtro de categoria imediatamente
+  const handleCategoriaChange = (novaCategoria: string) => {
+    setCategoria(novaCategoria)
+    const params = new URLSearchParams(searchParams)
+    if (novaCategoria && novaCategoria !== "all") {
+      params.set("categoria", novaCategoria)
+    } else {
+      params.delete("categoria")
+    }
+    router.replace(`${pathname}?${params.toString()}`)
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Filtros</CardTitle>
+        <CardDescription>Filtre produtos por categoria ou busque por nome</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-col gap-4 md:flex-row">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar produtos..."
+                className="pl-10"
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+              />
+            </div>
+          </div>
+          <Select value={categoria} onValueChange={handleCategoriaChange}>
+            <SelectTrigger className="w-full md:w-[200px]">
+              <SelectValue placeholder="Todas as categorias" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as categorias</SelectItem>
+              {categorias?.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>
+                  {cat.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </CardContent>
+    </Card>
+  )
 }
 
-console.log('vamooooo')
-
+// [MODIFICADO] Componente de página do servidor ficou mais simples
 export default async function ProdutosPage({
   searchParams,
 }: {
-  searchParams: SearchParams
+  searchParams: { categoria?: string; busca?: string }
 }) {
   const supabase = await createClient()
 
-  const { data, error } = await supabase.auth.getUser()
-  if (error || !data?.user) {
+  const { data: authData, error: authError } = await supabase.auth.getUser()
+  if (authError || !authData?.user) {
     redirect("/auth/login")
   }
 
-  // Buscar perfil do usuário
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
-
-  // Buscar categorias
+  const { data: profile } = await supabase.from("profiles").select("*").eq("id", authData.user.id).single()
   const { data: categorias } = await supabase.from("categorias").select("*").order("nome")
 
-  // Construir query para produtos
   let query = supabase
     .from("produtos")
-    .select(
-      `
-      *,
-      categorias (
-        id,
-        nome
-      )
-    `
-    )
+    .select("*, categorias(id, nome)")
     .eq("ativo", true)
 
-  // Aplicar filtros
-  // [CORREÇÃO] Lógica para ignorar o filtro quando "Todas as categorias" é selecionado.
-  if (searchParams.categoria && searchParams.categoria !== "all") {
+  if (searchParams.categoria) {
     query = query.eq("categoria_id", searchParams.categoria)
   }
-
   if (searchParams.busca) {
     query = query.ilike("nome", `%${searchParams.busca}%`)
   }
 
   const { data: produtos } = await query.order("nome")
 
-  // Estatísticas
   const totalProdutos = produtos?.length || 0
   const produtosBaixoEstoque = produtos?.filter((p) => p.estoque_atual <= p.estoque_minimo).length || 0
-  const valorTotalEstoque =
-    produtos?.reduce((total, p) => total + p.estoque_atual * (p.valor_unitario || 0), 0) || 0
+  const valorTotalEstoque = produtos?.reduce((total, p) => total + p.estoque_atual * (p.valor_unitario || 0), 0) || 0
 
   const isMainAdmin = profile?.email === "admin@admin.com" && profile?.perfil_acesso === "admin"
   const podeEditar =
     isMainAdmin ||
-    profile?.perfil_acesso === "super_admin" ||
-    profile?.perfil_acesso === "admin" ||
-    profile?.perfil_acesso === "operador"
-
-  console.log("User Profile in ProdutosPage:", profile)
-  console.log("Pode Editar:", podeEditar)
-  console.log(produtos)
+    ["super_admin", "admin", "operador"].includes(profile?.perfil_acesso || "")
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -101,7 +153,6 @@ export default async function ProdutosPage({
         </div>
       </div>
 
-      {/* Estatísticas */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -150,49 +201,9 @@ export default async function ProdutosPage({
         })}
       </div>
 
-      {/* Filtros */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtros</CardTitle>
-          <CardDescription>Filtre produtos por categoria ou busque por nome</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {/* [CORREÇÃO] Envolvido os filtros em um <form> para permitir a submissão. */}
-          <form className="flex flex-col gap-4 md:flex-row md:items-end">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar produtos..."
-                  className="pl-10"
-                  defaultValue={searchParams.busca}
-                  name="busca"
-                />
-              </div>
-            </div>
-            <Select name="categoria" defaultValue={searchParams.categoria || "all"}>
-              <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="Todas as categorias" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as categorias</SelectItem>
-                {categorias?.map((categoria) => (
-                  <SelectItem key={categoria.id} value={categoria.id}>
-                    {categoria.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {/* [CORREÇÃO] Adicionado um botão para aplicar os filtros. */}
-            <Button type="submit">
-              <Search className="mr-2 h-4 w-4" />
-              Filtrar
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      {/* A página agora renderiza o novo componente de filtros */}
+      <FiltrosProdutos categorias={categorias || []} />
 
-      {/* Lista de Produtos */}
       <ProdutosList produtos={produtos || []} podeEditar={podeEditar} />
     </div>
   )
