@@ -50,6 +50,8 @@ export default async function ProdutosPage({
     query = query.ilike("nome", `%${searchParams.busca}%`);
   }
 
+  console.log(query)
+
   const { data: produtos, error: produtosError } = await query.order("nome");
   if (produtosError) {
     console.error("Supabase error fetching produtos:", produtosError.message);
@@ -71,7 +73,9 @@ export default async function ProdutosPage({
     ["super_admin", "admin", "operador"].includes(profile?.perfil_acesso || "");
 
   return (
+    
     <div className="flex-1 space-y-6 p-6">
+      {console.log("User Profile in ProdutosPage:", profile)}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Gestão de Produtos</h1>
