@@ -58,10 +58,13 @@ export default async function ProdutosPage({
   const { data: produtos } = await query.order("nome")
 
   // Estatísticas
+  // Estatísticas gerais
   const totalProdutos = produtos?.length || 0
   const produtosBaixoEstoque = produtos?.filter((p) => p.estoque_atual <= p.estoque_minimo).length || 0
-  const valorTotalEstoque =
-    produtos?.reduce((total, p) => total + p.estoque_atual * (p.valor_unitario || 0), 0) || 0
+  const valorTotalEstoque = produtos?.reduce((acc, p) => acc + p.estoque_atual * (p.valor_unitario || 0), 0) || 0
+
+  const entradasMes = movimentacoes?.filter((m) => m.tipo_movimentacao === "entrada").length || 0
+  const saidasMes = movimentacoes?.filter((m) => m.tipo_movimentacao === "saida").length || 0
 
   const isMainAdmin = profile?.email === "admin@admin.com" && profile?.perfil_acesso === "admin"
   const podeEditar =
