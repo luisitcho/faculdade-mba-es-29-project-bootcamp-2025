@@ -105,17 +105,44 @@ export default async function RelatoriosPage({
     .eq("lida", false)
     .order("created_at", { ascending: false })
 
-  // Buscar dados para relatórios
-  const { data: produtos } = await supabase
+  // Buscar dados para relatórios - CORREÇÃO: Buscar SEM join primeiro
+  let query = supabase
     .from("produtos")
-    .select(`
-      *,
-      categorias (
-        id,
-        nome
-      )
-    `)
+    .select("*")
     .eq("ativo", true)
+
+  const { data: produtos, error: produtosError } = await query.order("nome")
+
+  if (produtosError) {
+    console.error("Erro ao buscar produtos:", produtosError)
+  }
+
+  console.log("Produtos encontrados (sem join):", produtos?.length)
+  console.log("Produtos dados:", produtos)
+
+  // CORREÇÃO: Buscar nomes das categorias separadamente
+  const produtosComCategorias = produtos ? await Promise.all(
+    produtos.map(async (produto) => {
+      if (produto.categoria_id) {
+        const { data: categoria } = await supabase
+          .from("categorias")
+          .select("nome")
+          .eq("id", produto.categoria_id)
+          .single()
+
+        return {
+          ...produto,
+          categorias: categoria ? { id: produto.categoria_id, nome: categoria.nome } : null
+        }
+      }
+      return {
+        ...produto,
+        categorias: null
+      }
+    })
+  ) : []
+
+  console.log("Produtos com categorias:", produtosComCategorias)
 
   const { data: categorias } = await supabase.from("categorias").select("*").order("nome")
 
@@ -140,17 +167,25 @@ export default async function RelatoriosPage({
     .lte("created_at", fimMes)
     .order("created_at", { ascending: false })
 
-  // Estatísticas gerais - ATUALIZADO: Alterado para ≤ 3 itens e formatação de moeda
+  // Estatísticas - CORREÇÃO: Usar produtos (sem join) para os cálculos
   const totalProdutos = produtos?.length || 0
   const produtosBaixoEstoque = produtos?.filter((p) => p.estoque_atual <= 3).length || 0
-  const valorTotalEstoque = produtos?.reduce((acc, p) => acc + p.estoque_atual * (p.valor_unitario || 0), 0) || 0
+  const valorTotalEstoque = produtos?.reduce((total, p) => total + p.estoque_atual * (p.valor_unitario || 0), 0) || 0;
   const valorFormatado = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL'
-  }).format(valorTotalEstoque)
+  }).format(valorTotalEstoque);
 
   const entradasMes = movimentacoes?.filter((m) => m.tipo_movimentacao === "entrada").length || 0
   const saidasMes = movimentacoes?.filter((m) => m.tipo_movimentacao === "saida").length || 0
+
+  // Teste adicional: contar todos os produtos
+  const { count: totalProdutosCount } = await supabase
+    .from("produtos")
+    .select("*", { count: 'exact', head: true })
+    .eq("ativo", true)
+
+  console.log("Total de produtos no banco:", totalProdutosCount)
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -172,15 +207,15 @@ export default async function RelatoriosPage({
               )}
             </Link>
           </Button>
-          
+
           <Button variant="outline" asChild>
             <Link href="/dashboard/produtos/exportar">
               <FileDown className="mr-2 h-4 w-4" />
               Exportar
             </Link>
           </Button>
-          
-          <ExportarRelatoriosButton produtos={produtos || []} movimentacoes={movimentacoes || []} />
+
+          <ExportarRelatoriosButton produtos={produtosComCategorias || []} movimentacoes={movimentacoes || []} />
         </div>
       </div>
 
@@ -201,7 +236,7 @@ export default async function RelatoriosPage({
         </div>
       )}
 
-      {/* Resumo Executivo - ATUALIZADO: Alterado para ≤ 3 itens e formatação de moeda */}
+      {/* Estatísticas - CORREÇÃO: Alterado card de estoque baixo para ≤ 3 */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -213,7 +248,6 @@ export default async function RelatoriosPage({
             <p className="text-xs text-muted-foreground">Produtos ativos</p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Estoque Baixo (≤ 3)</CardTitle>
@@ -224,18 +258,16 @@ export default async function RelatoriosPage({
             <p className="text-xs text-muted-foreground">Precisam reposição urgente</p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Valor do Estoque</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Valor Total Estoque</CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{valorFormatado}</div>
-            <p className="text-xs text-muted-foreground">Valor total em estoque</p>
+            <p className="text-xs text-muted-foreground">Valor em estoque</p>
           </CardContent>
         </Card>
-
         {/* CORREÇÃO: Alterado para card de notificações */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -304,11 +336,11 @@ export default async function RelatoriosPage({
       </Card>
 
       {/* Gráfico de Estoque por Categoria */}
-      <GraficoEstoque produtos={produtos || []} />
+      <GraficoEstoque produtos={produtosComCategorias || []} />
 
       {/* Relatórios */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <RelatorioEstoque produtos={produtos || []} />
+        <RelatorioEstoque produtos={produtosComCategorias || []} />
         <RelatorioMovimentacoes movimentacoes={movimentacoes || []} />
       </div>
     </div>
