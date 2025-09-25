@@ -15,8 +15,17 @@ export default async function DashboardPage() {
 
   // Buscar dados do perfil do usuário
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
+  
+  // Fallback se não encontrar perfil
+  const userProfile = profile || {
+    id: data.user.id,
+    nome: data.user.email?.split('@')[0] || 'Usuário',
+    email: data.user.email || '',
+    perfil_acesso: 'consulta',
+    ativo: true
+  }
 
-  const isMainAdmin = (profile?.email === "admin@admin.com" || profile?.email === "luishenrisc1@gmail.com") && profile?.perfil_acesso === "admin"
+  const isMainAdmin = (userProfile?.email === "admin@admin.com" || userProfile?.email === "luishenrisc1@gmail.com") && userProfile?.perfil_acesso === "admin"
 
   // Buscar estatísticas básicas
   const { data: totalProdutos } = await supabase.from("produtos").select("id", { count: "exact" })
@@ -68,7 +77,7 @@ export default async function DashboardPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
-            Bem-vindo, {profile?.nome || "Usuário"}! Perfil: {profile?.perfil_acesso}
+            Bem-vindo, {userProfile?.nome || "Usuário"}! Perfil: {userProfile?.perfil_acesso}
           </p>
         </div>
         <div className="flex gap-2">

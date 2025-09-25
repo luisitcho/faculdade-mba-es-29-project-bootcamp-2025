@@ -18,16 +18,20 @@ export default async function DashboardLayout({
   }
 
   // Buscar dados do perfil do usuário
-  const { data: profile, error: profileError } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
+  const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
   
-  // Debug temporário
-  console.log("User ID:", data.user.id)
-  console.log("Profile data:", profile)
-  console.log("Profile error:", profileError)
+  // Fallback se não encontrar perfil
+  const userProfile = profile || {
+    id: data.user.id,
+    nome: data.user.email?.split('@')[0] || 'Usuário',
+    email: data.user.email || '',
+    perfil_acesso: 'consulta',
+    ativo: true
+  }
 
   return (
     <div className="flex h-screen bg-background">
-      <Sidebar user={data.user} profile={profile} />
+      <Sidebar user={data.user} profile={userProfile} />
       <main className="flex-1 overflow-y-auto">{children}</main>
       <ToastNotifications userId={data.user.id} />
       <Toaster />
