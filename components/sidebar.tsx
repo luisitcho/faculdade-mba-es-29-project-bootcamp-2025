@@ -39,6 +39,8 @@ export function Sidebar({ user, profile }: SidebarProps) {
     router.push("/auth/login")
   }
 
+  console.log("User Profile:", profile)
+
   const allNavigation = [...navigation, ...(profile?.perfil_acesso === "admin" ? adminNavigation : [])]
 
   return (
