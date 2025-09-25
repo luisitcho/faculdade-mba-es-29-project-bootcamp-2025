@@ -23,10 +23,10 @@ const navigation = [
   { name: "Relatórios", href: "/dashboard/relatorios", icon: FileText },
 ]
 
-const adminNavigation = [
-  { name: "Usuários", href: "/dashboard/usuarios", icon: Users },
-  { name: "Configurações", href: "/dashboard/configuracoes", icon: Settings },
-]
+// const adminNavigation = [
+//   { name: "Usuários", href: "/dashboard/usuarios", icon: Users },
+//   { name: "Configurações", href: "/dashboard/configuracoes", icon: Settings },
+// ]
 
 export function Sidebar({ user, profile }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false)
@@ -41,7 +41,8 @@ export function Sidebar({ user, profile }: SidebarProps) {
 
   console.log("User Profile:", profile)
 
-  const allNavigation = [...navigation, ...(profile?.perfil_acesso === "admin" ? adminNavigation : [])]
+  // const allNavigation = [...navigation, ...(profile?.perfil_acesso === "admin" ? adminNavigation : [])]
+  const allNavigation = [...navigation]
 
   return (
     <>
