@@ -46,7 +46,7 @@ export default async function ProdutosPage({
     .eq("ativo", true)
 
   // Aplicar filtros
-  // 👇 [MODIFICAÇÃO] Adicionado `&& searchParams.categoria !== "all"` para ignorar o filtro quando "Todas" for selecionado.
+  // [CORREÇÃO] Lógica para ignorar o filtro quando "Todas as categorias" é selecionado.
   if (searchParams.categoria && searchParams.categoria !== "all") {
     query = query.eq("categoria_id", searchParams.categoria)
   }
@@ -57,21 +57,11 @@ export default async function ProdutosPage({
 
   const { data: produtos } = await query.order("nome")
 
-  console.log("=== DEBUG PRODUTOS PAGE ===")
-  console.log("Search Params:", searchParams)
-  console.log("Produtos fetched:", produtos?.length || 0)
-  console.log("===========================")
-
-  console.log(produtos)
-
   // Estatísticas
-  // Estatísticas gerais
   const totalProdutos = produtos?.length || 0
   const produtosBaixoEstoque = produtos?.filter((p) => p.estoque_atual <= p.estoque_minimo).length || 0
-  const valorTotalEstoque = produtos?.reduce((acc, p) => acc + p.estoque_atual * (p.valor_unitario || 0), 0) || 0
-
-  const entradasMes = movimentacoes?.filter((m) => m.tipo_movimentacao === "entrada").length || 0
-  const saidasMes = movimentacoes?.filter((m) => m.tipo_movimentacao === "saida").length || 0
+  const valorTotalEstoque =
+    produtos?.reduce((total, p) => total + p.estoque_atual * (p.valor_unitario || 0), 0) || 0
 
   const isMainAdmin = profile?.email === "admin@admin.com" && profile?.perfil_acesso === "admin"
   const podeEditar =
@@ -161,7 +151,7 @@ export default async function ProdutosPage({
           <CardDescription>Filtre produtos por categoria ou busque por nome</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* 👇 [MODIFICAÇÃO] Envolvido os filtros em um <form> para permitir a submissão. */}
+          {/* [CORREÇÃO] Envolvido os filtros em um <form> para permitir a submissão. */}
           <form className="flex flex-col gap-4 md:flex-row md:items-end">
             <div className="flex-1">
               <div className="relative">
@@ -174,7 +164,6 @@ export default async function ProdutosPage({
                 />
               </div>
             </div>
-            {/* 👇 [MODIFICAÇÃO] Adicionado 'name="categoria"' para que o valor seja enviado no formulário. */}
             <Select name="categoria" defaultValue={searchParams.categoria || "all"}>
               <SelectTrigger className="w-full md:w-[200px]">
                 <SelectValue placeholder="Todas as categorias" />
@@ -188,7 +177,7 @@ export default async function ProdutosPage({
                 ))}
               </SelectContent>
             </Select>
-            {/* 👇 [MODIFICAÇÃO] Adicionado um botão para aplicar os filtros. */}
+            {/* [CORREÇÃO] Adicionado um botão para aplicar os filtros. */}
             <Button type="submit">
               <Search className="mr-2 h-4 w-4" />
               Filtrar
