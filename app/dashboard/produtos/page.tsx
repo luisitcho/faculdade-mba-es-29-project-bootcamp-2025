@@ -40,7 +40,7 @@ export default async function ProdutosPage({
 
   let query = supabase
     .from("produtos")
-    .select(`*, categorias (id, nome)`) // Sintaxe mais segura se a relação estiver configurada
+    .select(`*`) // Sintaxe mais segura se a relação estiver configurada
     .eq("ativo", true);
 
   if (searchParams.categoria) {
