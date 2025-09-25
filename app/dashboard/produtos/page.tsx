@@ -31,22 +31,19 @@ export default async function ProdutosPage({
   // Buscar categorias
   const { data: categorias } = await supabase.from("categorias").select("*").order("nome")
 
-  // Construir query para produtos
+  // CORREÇÃO: Construir query para produtos com join correto
   let query = supabase
     .from("produtos")
-    .select(
-      `
+    .select(`
       *,
-      categorias (
+      categorias!inner (
         id,
         nome
       )
-    `
-    )
+    `)
     .eq("ativo", true)
 
   // Aplicar filtros
-  // [CORREÇÃO] Lógica para ignorar o filtro quando "Todas as categorias" é selecionado.
   if (searchParams.categoria && searchParams.categoria !== "all") {
     query = query.eq("categoria_id", searchParams.categoria)
   }
@@ -55,27 +52,60 @@ export default async function ProdutosPage({
     query = query.ilike("nome", `%${searchParams.busca}%`)
   }
 
-  const { data: produtos } = await query.order("nome")
+  // CORREÇÃO: Adicionar tratamento de erro
+  const { data: produtos, error: produtosError } = await query.order("nome")
+
+  if (produtosError) {
+    console.error("Erro ao buscar produtos:", produtosError)
+    
+    // CORREÇÃO: Tentar fallback sem o join se houver erro
+    console.log("Tentando fallback sem join...")
+    
+    let fallbackQuery = supabase
+      .from("produtos")
+      .select("*")
+      .eq("ativo", true)
+
+    if (searchParams.categoria && searchParams.categoria !== "all") {
+      fallbackQuery = fallbackQuery.eq("categoria_id", searchParams.categoria)
+    }
+
+    if (searchParams.busca) {
+      fallbackQuery = fallbackQuery.ilike("nome", `%${searchParams.busca}%`)
+    }
+
+    const { data: produtosFallback, error: fallbackError } = await fallbackQuery.order("nome")
+    
+    if (fallbackError) {
+      console.error("Erro no fallback:", fallbackError)
+    } else {
+      console.log("Fallback bem-sucedido, produtos encontrados:", produtosFallback?.length)
+    }
+  }
+
+  console.log("Produtos carregados:", produtos?.length)
+  console.log("Primeiro produto:", produtos?.[0])
 
   // Estatísticas
   const totalProdutos = produtos?.length || 0
   const produtosBaixoEstoque = produtos?.filter((p) => p.estoque_atual <= p.estoque_minimo).length || 0
-  const valorTotalEstoque =
-    produtos?.reduce((total, p) => total + p.estoque_atual * (p.valor_unitario || 0), 0) || 0
+  const valorTotalEstoque = produtos?.reduce((total, p) => total + p.estoque_atual * (p.valor_unitario || 0), 0) || 0
 
   const isMainAdmin = profile?.email === "admin@admin.com" && profile?.perfil_acesso === "admin"
-  const podeEditar =
-    isMainAdmin ||
+  const podeEditar = isMainAdmin ||
     profile?.perfil_acesso === "super_admin" ||
     profile?.perfil_acesso === "admin" ||
     profile?.perfil_acesso === "operador"
 
-  console.log("User Profile in ProdutosPage:", profile)
-  console.log("Pode Editar:", podeEditar)
-  console.log(produtos)
+  // CORREÇÃO: Teste simples para verificar se há produtos
+  const { data: testeProdutos, error: testeError } = await supabase
+    .from("produtos")
+    .select("id")
+    .eq("ativo", true)
+    .limit(1)
 
-  console.log(produtos)
-  console.log("Produtos carregados:", JSON.stringify(produtos, null, 2))
+  console.log("Teste simples - Produtos ativos existem?", testeProdutos?.length > 0)
+  console.log("Erro no teste:", testeError)
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -101,8 +131,14 @@ export default async function ProdutosPage({
           )}
         </div>
       </div>
-      <p>totalProdutos: {totalProdutos}</p>
-      <p>produtosBaixoEstoque: {produtosBaixoEstoque}</p>      
+
+      {/* Debug info */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+        <p className="text-sm">
+          <strong>Debug Info:</strong> Total de produtos encontrados: {totalProdutos} | 
+          Teste simples: {testeProdutos?.length || 0} produto(s) ativo(s)
+        </p>
+      </div>
 
       {/* Estatísticas */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -160,7 +196,6 @@ export default async function ProdutosPage({
           <CardDescription>Filtre produtos por categoria ou busque por nome</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* [CORREÇÃO] Envolvido os filtros em um <form> para permitir a submissão. */}
           <form className="flex flex-col gap-4 md:flex-row md:items-end">
             <div className="flex-1">
               <div className="relative">
@@ -186,7 +221,6 @@ export default async function ProdutosPage({
                 ))}
               </SelectContent>
             </Select>
-            {/* [CORREÇÃO] Adicionado um botão para aplicar os filtros. */}
             <Button type="submit">
               <Search className="mr-2 h-4 w-4" />
               Filtrar
