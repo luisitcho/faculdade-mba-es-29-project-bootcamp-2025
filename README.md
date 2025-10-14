@@ -2,7 +2,7 @@
 
 Sistema completo de gerenciamento de estoque com controle de produtos, movimentações, usuários e unidades.
 
-## Tecnologias Utilizadas
+## 🚀 Tecnologias Utilizadas
 
 ### Frontend
 - **[Next.js 15](https://nextjs.org/)** - Framework React com App Router
@@ -24,7 +24,7 @@ Sistema completo de gerenciamento de estoque com controle de produtos, movimenta
 ### Hospedagem & Deploy
 - **[Vercel](https://vercel.com/)** - Plataforma de hospedagem e deploy
 
-## Funcionalidades
+## 📋 Funcionalidades
 
 ### Gestão de Usuários
 - Sistema de autenticação com Supabase
@@ -67,7 +67,7 @@ Sistema completo de gerenciamento de estoque com controle de produtos, movimenta
 - Central de notificações
 - Notificações em tempo real
 
-## Instalação
+## 🛠️ Instalação
 
 ### Pré-requisitos
 - Node.js 18+ instalado
@@ -108,13 +108,13 @@ npm run dev
 
 6. Acesse http://localhost:3000
 
-## Acesso Padrão
+## 🔐 Acesso Padrão
 
 **Usuário Admin:**
 - Email: luishenrisc1@gmail.com
 - Senha: 123456
 
-## Estrutura do Projeto
+## 📁 Estrutura do Projeto
 
 \`\`\`
 ├── app/
@@ -135,7 +135,7 @@ npm run dev
 └── middleware.ts         # Middleware de autenticação
 \`\`\`
 
-## Segurança
+## 🔒 Segurança
 
 - Autenticação via Supabase Auth
 - Row Level Security (RLS) em todas as tabelas
@@ -143,7 +143,7 @@ npm run dev
 - Controle de permissões por perfil
 - Validação de dados no servidor
 
-## Banco de Dados
+## 📊 Banco de Dados
 
 ### Tabelas Principais
 - `profiles` - Perfis de usuários
@@ -153,48 +153,18 @@ npm run dev
 - `movimentacoes` - Histórico de movimentações
 - `notificacoes` - Sistema de notificações
 
-## Como Executar o Projeto
-1. Clone este repositório:
-   ```bash
-   git clone https://github.com/luisitcho/faculdade-mba-es-29-project-bootcamp-2025
-   ```
+## 🚀 Deploy
 
-2. Instale as dependências:
-   ```bash
-   npm install
-   ```
+O projeto está configurado para deploy automático no Vercel:
 
-3. Execute o servidor de desenvolvimento:
-   ```bash
-   npm run dev
-   ```
+1. Conecte seu repositório ao Vercel
+2. Configure as variáveis de ambiente
+3. O deploy será feito automaticamente a cada push
 
-4. Acesse no navegador:
-   ```
-   http://localhost:3000
-   ```
+## 📝 Licença
 
----
+Este projeto é privado e de uso interno.
 
-## Credenciais de Teste
-Para acessar o sistema com perfil **Administrador**, utilize as credenciais abaixo:
+## 👨‍💻 Desenvolvido com v0
 
-- **Usuário:** `admin@admin.com`  
-- **Senha:** `admin123`  
-
-Essas credenciais são fornecidas apenas para fins de **demonstração e testes**.
-
----
-
-## Autores
-- André Luis Gnatiuc
-- Edimichael das Virgens de Lima
-- Luciano de Carvalho
-- Luis Henrique de Souza Cruz
-- Paulo Simão Barreto
-- Rodrigo da Silva Assimos
-- Vinicius Fernandes Umbelino dos Santos
-- Vitor Fernandes Palha
-- Vitor Pereira Rocha
-
-Projeto desenvolvido durante o Bootcamp como prática de desenvolvimento web fullstack.
+Sistema desenvolvido utilizando v0 by Vercel - AI-powered development platform.

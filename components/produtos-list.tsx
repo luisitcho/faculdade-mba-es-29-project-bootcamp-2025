@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -33,6 +33,11 @@ interface Produto {
     id: string
     nome: string
   }
+  unidades?: Array<{
+    id: string
+    nome: string
+    estoque_local: number
+  }>
 }
 
 interface ProdutosListProps {
@@ -41,6 +46,7 @@ interface ProdutosListProps {
 }
 
 export function ProdutosList({ produtos, podeEditar }: ProdutosListProps) {
+  const [produtosComUnidades, setProdutosComUnidades] = useState<Produto[]>(produtos)
   const [editandoEstoque, setEditandoEstoque] = useState<string | null>(null)
   const [novoEstoque, setNovoEstoque] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -119,6 +125,34 @@ export function ProdutosList({ produtos, podeEditar }: ProdutosListProps) {
     }
   }
 
+  useEffect(() => {
+    const buscarUnidades = async () => {
+      const supabase = createClient()
+
+      const produtosAtualizados = await Promise.all(
+        produtos.map(async (produto) => {
+          const { data: produtoUnidades } = await supabase
+            .from("produto_unidades")
+            .select("unidade_id, estoque_local, unidades(id, nome)")
+            .eq("produto_id", produto.id)
+
+          const unidades =
+            produtoUnidades?.map((pu: any) => ({
+              id: pu.unidades.id,
+              nome: pu.unidades.nome,
+              estoque_local: pu.estoque_local,
+            })) || []
+
+          return { ...produto, unidades }
+        }),
+      )
+
+      setProdutosComUnidades(produtosAtualizados)
+    }
+
+    buscarUnidades()
+  }, [produtos])
+
   if (!produtos.length) {
     return (
       <Card>
@@ -141,7 +175,7 @@ export function ProdutosList({ produtos, podeEditar }: ProdutosListProps) {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {produtos.map((produto) => {
+      {produtosComUnidades.map((produto) => {
         const estoqueStatus = getEstoqueStatus(produto.estoque_atual, produto.estoque_minimo)
         const estoqueBaixo = produto.estoque_atual <= produto.estoque_minimo
 
@@ -211,6 +245,21 @@ export function ProdutosList({ produtos, podeEditar }: ProdutosListProps) {
                   </p>
                 </div>
               </div>
+              {produto.unidades && produto.unidades.length > 0 && (
+                <div className="text-sm border-t pt-3">
+                  <p className="text-muted-foreground mb-2">Unidades:</p>
+                  <div className="space-y-1">
+                    {produto.unidades.map((unidade) => (
+                      <div key={unidade.id} className="flex justify-between items-center">
+                        <span className="text-sm">{unidade.nome}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {unidade.estoque_local} {produto.unidade_medida}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="text-sm">
                 <p className="text-muted-foreground">Valor Unitário</p>
                 <p className="font-medium">

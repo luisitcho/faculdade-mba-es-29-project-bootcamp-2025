@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 import { ArrowLeft, Save } from "lucide-react"
 import Link from "next/link"
 
@@ -33,8 +34,9 @@ export function ProdutoForm({ categorias, produto }: ProdutoFormProps) {
   const [nome, setNome] = useState(produto?.nome || "")
   const [descricao, setDescricao] = useState(produto?.descricao || "")
   const [categoriaId, setCategoriaId] = useState(produto?.categoria_id || "")
-  const [unidadeId, setUnidadeId] = useState(produto?.unidade_id || "")
   const [unidades, setUnidades] = useState<Unidade[]>([])
+  const [unidadesSelecionadas, setUnidadesSelecionadas] = useState<string[]>([])
+  const [estoquePorUnidade, setEstoquePorUnidade] = useState<Record<string, string>>({})
   const [unidadeMedida, setUnidadeMedida] = useState(produto?.unidade_medida || "")
   const [estoqueMinimo, setEstoqueMinimo] = useState(produto?.estoque_minimo?.toString() || "0")
   const [estoqueAtual, setEstoqueAtual] = useState(produto?.estoque_atual?.toString() || "0")
@@ -46,11 +48,49 @@ export function ProdutoForm({ categorias, produto }: ProdutoFormProps) {
   useEffect(() => {
     const fetchUnidades = async () => {
       const supabase = createClient()
-      const { data } = await supabase.from("unidades").select("id, nome").order("nome")
+      const { data } = await supabase.from("unidades").select("id, nome").eq("ativo", true).order("nome")
       if (data) setUnidades(data)
+
+      if (produto?.id) {
+        const { data: produtoUnidades } = await supabase
+          .from("produto_unidades")
+          .select("unidade_id, estoque_local")
+          .eq("produto_id", produto.id)
+
+        if (produtoUnidades) {
+          const unidadesIds = produtoUnidades.map((pu: any) => pu.unidade_id)
+          setUnidadesSelecionadas(unidadesIds)
+
+          const estoques: Record<string, string> = {}
+          produtoUnidades.forEach((pu: any) => {
+            estoques[pu.unidade_id] = pu.estoque_local.toString()
+          })
+          setEstoquePorUnidade(estoques)
+        }
+      }
     }
     fetchUnidades()
-  }, [])
+  }, [produto])
+
+  const handleToggleUnidade = (unidadeId: string) => {
+    setUnidadesSelecionadas((prev) => {
+      if (prev.includes(unidadeId)) {
+        // Remover unidade
+        const novoEstoque = { ...estoquePorUnidade }
+        delete novoEstoque[unidadeId]
+        setEstoquePorUnidade(novoEstoque)
+        return prev.filter((id) => id !== unidadeId)
+      } else {
+        // Adicionar unidade
+        setEstoquePorUnidade((prev) => ({ ...prev, [unidadeId]: "0" }))
+        return [...prev, unidadeId]
+      }
+    })
+  }
+
+  const handleEstoqueUnidadeChange = (unidadeId: string, valor: string) => {
+    setEstoquePorUnidade((prev) => ({ ...prev, [unidadeId]: valor }))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -59,30 +99,54 @@ export function ProdutoForm({ categorias, produto }: ProdutoFormProps) {
     setError(null)
 
     try {
-      let finalUnidadeId = unidadeId
-      if (!finalUnidadeId && unidades.length > 0) {
-        finalUnidadeId = unidades[0].id
+      if (unidadesSelecionadas.length === 0) {
+        throw new Error("Selecione pelo menos uma unidade para o produto")
       }
 
       const produtoData = {
         nome,
         descricao,
         categoria_id: categoriaId,
-        unidade_id: finalUnidadeId,
         unidade_medida: unidadeMedida,
         estoque_minimo: Number.parseInt(estoqueMinimo),
         estoque_atual: Number.parseInt(estoqueAtual),
         valor_unitario: valorUnitario ? Number.parseFloat(valorUnitario) : null,
       }
 
-      let result
+      let produtoId = produto?.id
+
       if (produto) {
-        result = await supabase.from("produtos").update(produtoData).eq("id", produto.id)
+        // Atualizar produto existente
+        const { error: updateError } = await supabase.from("produtos").update(produtoData).eq("id", produto.id)
+
+        if (updateError) throw updateError
       } else {
-        result = await supabase.from("produtos").insert([produtoData])
+        // Criar novo produto
+        const { data: novoProduto, error: insertError } = await supabase
+          .from("produtos")
+          .insert([produtoData])
+          .select()
+          .single()
+
+        if (insertError) throw insertError
+        produtoId = novoProduto.id
       }
 
-      if (result.error) throw result.error
+      // Remover relacionamentos antigos se estiver editando
+      if (produto?.id) {
+        await supabase.from("produto_unidades").delete().eq("produto_id", produto.id)
+      }
+
+      // Inserir novos relacionamentos
+      const produtoUnidadesData = unidadesSelecionadas.map((unidadeId) => ({
+        produto_id: produtoId,
+        unidade_id: unidadeId,
+        estoque_local: Number.parseInt(estoquePorUnidade[unidadeId] || "0"),
+      }))
+
+      const { error: relError } = await supabase.from("produto_unidades").insert(produtoUnidadesData)
+
+      if (relError) throw relError
 
       router.push("/dashboard/produtos")
       router.refresh()
@@ -143,22 +207,6 @@ export function ProdutoForm({ categorias, produto }: ProdutoFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="unidade">Unidade *</Label>
-              <Select value={unidadeId} onValueChange={setUnidadeId} required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a unidade" />
-                </SelectTrigger>
-                <SelectContent>
-                  {unidades.map((unidade) => (
-                    <SelectItem key={unidade.id} value={unidade.id}>
-                      {unidade.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="descricao">Descrição</Label>
               <Textarea
                 id="descricao"
@@ -167,6 +215,48 @@ export function ProdutoForm({ categorias, produto }: ProdutoFormProps) {
                 placeholder="Descrição detalhada do produto"
                 rows={3}
               />
+            </div>
+
+            <div className="space-y-3">
+              <Label>Unidades * (selecione uma ou mais)</Label>
+              <div className="border rounded-md p-4 space-y-3 max-h-64 overflow-y-auto">
+                {unidades.map((unidade) => (
+                  <div key={unidade.id} className="flex items-center gap-3">
+                    <Checkbox
+                      id={`unidade-${unidade.id}`}
+                      checked={unidadesSelecionadas.includes(unidade.id)}
+                      onCheckedChange={() => handleToggleUnidade(unidade.id)}
+                    />
+                    <Label htmlFor={`unidade-${unidade.id}`} className="flex-1 cursor-pointer">
+                      {unidade.nome}
+                    </Label>
+                    {unidadesSelecionadas.includes(unidade.id) && (
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor={`estoque-${unidade.id}`} className="text-sm text-muted-foreground">
+                          Estoque:
+                        </Label>
+                        <Input
+                          id={`estoque-${unidade.id}`}
+                          type="number"
+                          min="0"
+                          value={estoquePorUnidade[unidade.id] || "0"}
+                          onChange={(e) => handleEstoqueUnidadeChange(unidade.id, e.target.value)}
+                          className="w-24 h-8"
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {unidades.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Nenhuma unidade cadastrada.{" "}
+                  <Link href="/dashboard/unidades" className="text-primary hover:underline">
+                    Cadastre uma unidade
+                  </Link>{" "}
+                  primeiro.
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -192,7 +282,7 @@ export function ProdutoForm({ categorias, produto }: ProdutoFormProps) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="estoqueAtual">Estoque Atual *</Label>
+                <Label htmlFor="estoqueAtual">Estoque Total *</Label>
                 <Input
                   id="estoqueAtual"
                   type="number"

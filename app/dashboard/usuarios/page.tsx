@@ -26,7 +26,7 @@ export default async function UsuariosPage({
   // Verificar se é admin ou super_admin
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
 
-  const isMainAdmin = profile?.email === "admin@admin.com" && profile?.perfil_acesso === "admin"
+  const isMainAdmin = profile?.email === "luishenrisc1@gmail.com" || profile?.perfil_acesso === "admin"
 
   if (!isMainAdmin && profile?.perfil_acesso !== "super_admin") {
     redirect("/dashboard")

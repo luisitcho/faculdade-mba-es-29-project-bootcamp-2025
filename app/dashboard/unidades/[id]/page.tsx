@@ -30,14 +30,29 @@ export default async function UnidadeDetalhePage({ params }: { params: { id: str
     redirect("/dashboard/unidades")
   }
 
-  const { data: produtosRaw } = await supabase.from("produtos").select("*").eq("unidade_id", params.id).order("nome")
+  const { data: produtoUnidades } = await supabase
+    .from("produto_unidades")
+    .select("produto_id, estoque_local")
+    .eq("unidade_id", params.id)
+
+  // Buscar detalhes dos produtos
+  const produtoIds = produtoUnidades?.map((pu) => pu.produto_id) || []
+
+  let produtosRaw: any[] = []
+  if (produtoIds.length > 0) {
+    const { data } = await supabase.from("produtos").select("*").in("id", produtoIds).order("nome")
+    produtosRaw = data || []
+  }
 
   const { data: categorias } = await supabase.from("categorias").select("*")
 
+  // Combinar produtos com estoque local da unidade
   const produtos = produtosRaw?.map((produto) => {
     const categoria = categorias?.find((c) => c.id === produto.categoria_id)
+    const produtoUnidade = produtoUnidades?.find((pu) => pu.produto_id === produto.id)
     return {
       ...produto,
+      estoque_atual: produtoUnidade?.estoque_local || 0, // Usar estoque local da unidade
       categorias: categoria ? { nome: categoria.nome } : null,
     }
   })
