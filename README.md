@@ -24,7 +24,7 @@ Sistema completo de gerenciamento de estoque com controle de produtos, movimenta
 ### Hospedagem & Deploy
 - **[Vercel](https://vercel.com/)** - Plataforma de hospedagem e deploy
 
-## 📋 Funcionalidades
+## Funcionalidades
 
 ### Gestão de Usuários
 - Sistema de autenticação com Supabase
@@ -108,7 +108,7 @@ npm run dev
 
 6. Acesse http://localhost:3000
 
-## 🔐 Acesso Padrão
+## Acesso Padrão
 
 **Usuário Admin:**
 - Email: luishenrisc1@gmail.com
