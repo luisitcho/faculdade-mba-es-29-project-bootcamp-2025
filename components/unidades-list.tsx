@@ -54,7 +54,7 @@ export function UnidadesList({ unidades, profile }: UnidadesListProps) {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
-  const isAdmin = profile?.perfil_acesso === "admin"
+  const isAdmin = profile?.email === "luishenrisc1@gmail.com" || profile?.perfil_acesso === "admin"
 
   const handleOpenDialog = (unidade?: Unidade) => {
     if (unidade) {

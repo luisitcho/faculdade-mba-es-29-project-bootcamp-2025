@@ -30,12 +30,17 @@ export default async function UnidadeDetalhePage({ params }: { params: { id: str
     redirect("/dashboard/unidades")
   }
 
-  // Buscar produtos da unidade
-  const { data: produtos } = await supabase
-    .from("produtos")
-    .select("*, categorias(nome)")
-    .eq("unidade_id", params.id)
-    .order("nome")
+  const { data: produtosRaw } = await supabase.from("produtos").select("*").eq("unidade_id", params.id).order("nome")
+
+  const { data: categorias } = await supabase.from("categorias").select("*")
+
+  const produtos = produtosRaw?.map((produto) => {
+    const categoria = categorias?.find((c) => c.id === produto.categoria_id)
+    return {
+      ...produto,
+      categorias: categoria ? { nome: categoria.nome } : null,
+    }
+  })
 
   return (
     <div className="space-y-6">

@@ -31,17 +31,7 @@ export default async function ProdutosPage({
   // Buscar categorias
   const { data: categorias } = await supabase.from("categorias").select("*").order("nome")
 
-  // Construir query para produtos
-  let query = supabase
-    .from("produtos")
-    .select(`
-      *,
-      categorias (
-        id,
-        nome
-      )
-    `)
-    .eq("ativo", true)
+  let query = supabase.from("produtos").select("*").eq("ativo", true)
 
   // Aplicar filtros
   if (searchParams.categoria) {
@@ -52,14 +42,22 @@ export default async function ProdutosPage({
     query = query.ilike("nome", `%${searchParams.busca}%`)
   }
 
-  const { data: produtos } = await query.order("nome")
+  const { data: produtosRaw } = await query.order("nome")
+
+  const produtos = produtosRaw?.map((produto) => {
+    const categoria = categorias?.find((c) => c.id === produto.categoria_id)
+    return {
+      ...produto,
+      categorias: categoria ? { id: categoria.id, nome: categoria.nome } : null,
+    }
+  })
 
   // Estatísticas
   const totalProdutos = produtos?.length || 0
   const produtosBaixoEstoque = produtos?.filter((p) => p.estoque_atual <= p.estoque_minimo).length || 0
   const valorTotalEstoque = produtos?.reduce((total, p) => total + p.estoque_atual * (p.valor_unitario || 0), 0) || 0
 
-  const isMainAdmin = profile?.email === "admin@admin.com" && profile?.perfil_acesso === "admin"
+  const isMainAdmin = profile?.email === "luishenrisc1@gmail.com" && profile?.perfil_acesso === "admin"
   const podeEditar =
     isMainAdmin ||
     profile?.perfil_acesso === "super_admin" ||

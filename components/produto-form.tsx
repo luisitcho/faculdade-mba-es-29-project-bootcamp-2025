@@ -59,11 +59,16 @@ export function ProdutoForm({ categorias, produto }: ProdutoFormProps) {
     setError(null)
 
     try {
+      let finalUnidadeId = unidadeId
+      if (!finalUnidadeId && unidades.length > 0) {
+        finalUnidadeId = unidades[0].id
+      }
+
       const produtoData = {
         nome,
         descricao,
         categoria_id: categoriaId,
-        unidade_id: unidadeId,
+        unidade_id: finalUnidadeId,
         unidade_medida: unidadeMedida,
         estoque_minimo: Number.parseInt(estoqueMinimo),
         estoque_atual: Number.parseInt(estoqueAtual),
@@ -80,7 +85,9 @@ export function ProdutoForm({ categorias, produto }: ProdutoFormProps) {
       if (result.error) throw result.error
 
       router.push("/dashboard/produtos")
+      router.refresh()
     } catch (error: unknown) {
+      console.error("[v0] Erro ao salvar produto:", error)
       setError(error instanceof Error ? error.message : "Erro ao salvar produto")
     } finally {
       setIsLoading(false)
@@ -90,7 +97,7 @@ export function ProdutoForm({ categorias, produto }: ProdutoFormProps) {
   return (
     <div className="max-w-2xl">
       <div className="mb-6">
-        <Button variant="ghost" asChild>
+        <Button variant="ghost" asChild className="cursor-pointer">
           <Link href="/dashboard/produtos">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Voltar para Produtos
@@ -164,9 +171,9 @@ export function ProdutoForm({ categorias, produto }: ProdutoFormProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="unidade">Unidade de Medida *</Label>
+                <Label htmlFor="unidadeMedida">Unidade de Medida *</Label>
                 <Input
-                  id="unidade"
+                  id="unidadeMedida"
                   value={unidadeMedida}
                   onChange={(e) => setUnidadeMedida(e.target.value)}
                   placeholder="Ex: kg, un, lt"

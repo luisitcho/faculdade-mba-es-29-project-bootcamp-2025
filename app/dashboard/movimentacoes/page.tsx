@@ -36,14 +36,7 @@ export default async function MovimentacoesPage({
         id,
         nome,
         unidade_medida,
-        categorias (
-          nome
-        )
-      ),
-      usuario_id (
-        profiles (
-          nome
-        )
+        categoria_id
       )
     `)
 

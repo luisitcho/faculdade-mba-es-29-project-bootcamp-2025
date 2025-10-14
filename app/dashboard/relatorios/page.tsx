@@ -27,40 +27,47 @@ export default async function RelatoriosPage({
     redirect("/auth/login")
   }
 
-  // Buscar dados para relatórios
-  const { data: produtos } = await supabase
-    .from("produtos")
-    .select(`
-      *,
-      categorias (
-        id,
-        nome
-      )
-    `)
-    .eq("ativo", true)
+  const { data: produtosRaw } = await supabase.from("produtos").select("*").eq("ativo", true)
 
   const { data: categorias } = await supabase.from("categorias").select("*").order("nome")
+
+  const produtos = produtosRaw?.map((produto) => {
+    const categoria = categorias?.find((c) => c.id === produto.categoria_id)
+    return {
+      ...produto,
+      categorias: categoria ? { id: categoria.id, nome: categoria.nome } : null,
+    }
+  })
 
   // Calcular período para movimentações
   const hoje = new Date()
   const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString()
   const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).toISOString()
 
-  const { data: movimentacoes } = await supabase
+  const { data: movimentacoesRaw } = await supabase
     .from("movimentacoes")
     .select(`
       *,
       produtos (
         nome,
         unidade_medida,
-        categorias (
-          nome
-        )
+        categoria_id
       )
     `)
     .gte("created_at", inicioMes)
     .lte("created_at", fimMes)
     .order("created_at", { ascending: false })
+
+  const movimentacoes = movimentacoesRaw?.map((mov) => {
+    const categoria = categorias?.find((c) => c.id === mov.produtos?.categoria_id)
+    return {
+      ...mov,
+      produtos: {
+        ...mov.produtos,
+        categorias: categoria ? { nome: categoria.nome } : null,
+      },
+    }
+  })
 
   // Estatísticas gerais
   const totalProdutos = produtos?.length || 0

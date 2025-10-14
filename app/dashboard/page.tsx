@@ -16,17 +16,18 @@ export default async function DashboardPage() {
   // Buscar dados do perfil do usuário
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
 
-  const isMainAdmin = profile?.email === "admin@admin.com" && profile?.perfil_acesso === "admin"
+  const isMainAdmin = profile?.email === "luishenrisc1@gmail.com" && profile?.perfil_acesso === "admin"
 
-  // Buscar estatísticas básicas
-  const { data: totalProdutos } = await supabase.from("produtos").select("id", { count: "exact" })
+  const { count: totalProdutos } = await supabase.from("produtos").select("*", { count: "exact", head: true })
 
-  const { data: totalUsuarios } = await supabase.from("profiles").select("id", { count: "exact" })
+  const { count: totalUsuarios } = await supabase.from("profiles").select("*", { count: "exact", head: true })
 
-  const { data: produtosBaixoEstoque } = await supabase
+  const { data: todosProdutos } = await supabase
     .from("produtos")
-    .select("id", { count: "exact" })
-    .lt("estoque_atual", "estoque_minimo")
+    .select("estoque_atual, estoque_minimo")
+    .eq("ativo", true)
+
+  const produtosBaixoEstoque = todosProdutos?.filter((p) => p.estoque_atual <= p.estoque_minimo).length || 0
 
   // Movimentações de hoje
   const hoje = new Date().toISOString().split("T")[0]
@@ -36,7 +37,23 @@ export default async function DashboardPage() {
     .gte("created_at", `${hoje}T00:00:00`)
     .lt("created_at", `${hoje}T23:59:59`)
 
-  // Últimas movimentações
+  const { data: todosProdutosAlerta } = await supabase.from("produtos").select("*").eq("ativo", true)
+
+  const { data: categorias } = await supabase.from("categorias").select("*")
+
+  const produtosAlerta =
+    todosProdutosAlerta
+      ?.filter((p) => p.estoque_atual <= p.estoque_minimo)
+      .slice(0, 5)
+      .map((produto) => {
+        const categoria = categorias?.find((c) => c.id === produto.categoria_id)
+        return {
+          ...produto,
+          categorias: categoria ? { nome: categoria.nome } : null,
+        }
+      }) || []
+
+  // Últimas Movimentações
   const { data: ultimasMovimentacoes } = await supabase
     .from("movimentacoes")
     .select(`
@@ -47,19 +64,6 @@ export default async function DashboardPage() {
       )
     `)
     .order("created_at", { ascending: false })
-    .limit(5)
-
-  // Produtos com estoque baixo
-  const { data: produtosAlerta } = await supabase
-    .from("produtos")
-    .select(`
-      *,
-      categorias (
-        nome
-      )
-    `)
-    .lte("estoque_atual", "estoque_minimo")
-    .eq("ativo", true)
     .limit(5)
 
   return (
@@ -85,7 +89,7 @@ export default async function DashboardPage() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalProdutos?.length || 0}</div>
+            <div className="text-2xl font-bold">{totalProdutos || 0}</div>
             <p className="text-xs text-muted-foreground">Produtos cadastrados</p>
           </CardContent>
         </Card>
@@ -96,7 +100,7 @@ export default async function DashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalUsuarios?.length || 0}</div>
+            <div className="text-2xl font-bold">{totalUsuarios || 0}</div>
             <p className="text-xs text-muted-foreground">Usuários no sistema</p>
           </CardContent>
         </Card>
@@ -107,7 +111,7 @@ export default async function DashboardPage() {
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{produtosBaixoEstoque?.length || 0}</div>
+            <div className="text-2xl font-bold text-orange-600">{produtosBaixoEstoque}</div>
             <p className="text-xs text-muted-foreground">Produtos com estoque baixo</p>
           </CardContent>
         </Card>
@@ -143,7 +147,7 @@ export default async function DashboardPage() {
                   >
                     <div>
                       <p className="font-medium text-sm">{produto.nome}</p>
-                      <p className="text-xs text-muted-foreground">{produto.categorias.nome}</p>
+                      <p className="text-xs text-muted-foreground">{produto.categorias?.nome}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-medium text-orange-600">
@@ -185,10 +189,10 @@ export default async function DashboardPage() {
                       ) : (
                         <TrendingUp className="h-3 w-3 text-red-600 rotate-180" />
                       )}
-                      <span className="truncate">{mov.produtos.nome}</span>
+                      <span className="truncate">{mov.produtos?.nome}</span>
                     </div>
                     <span className="text-muted-foreground">
-                      {mov.quantidade} {mov.produtos.unidade_medida}
+                      {mov.quantidade} {mov.produtos?.unidade_medida}
                     </span>
                   </div>
                 ))}

@@ -24,10 +24,9 @@ export function ToastNotifications({ userId }: ToastNotificationsProps) {
         .eq("usuario_id", userId)
         .order("created_at", { ascending: false })
         .limit(1)
-        .single()
 
-      if (data) {
-        setLastNotificationId(data.id)
+      if (data && data.length > 0) {
+        setLastNotificationId(data[0].id)
       }
     }
 
