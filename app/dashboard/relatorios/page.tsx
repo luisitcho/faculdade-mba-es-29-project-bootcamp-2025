@@ -1,13 +1,12 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { FileText, Calendar, TrendingUp, Package, AlertTriangle } from "lucide-react"
+import { Calendar, TrendingUp, Package, AlertTriangle } from "lucide-react"
 import { RelatorioEstoque } from "@/components/relatorio-estoque"
 import { RelatorioMovimentacoes } from "@/components/relatorio-movimentacoes"
 import { GraficoEstoque } from "@/components/grafico-estoque"
 import { ExportarRelatoriosButton } from "@/components/exportar-relatorios-button"
+import { FiltrosRelatorio } from "@/components/filtros-relatorio"
 
 interface SearchParams {
   tipo?: string
@@ -137,58 +136,7 @@ export default async function RelatoriosPage({
       </div>
 
       {/* Filtros de Relatório */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtros de Relatório</CardTitle>
-          <CardDescription>Personalize os relatórios selecionando os filtros desejados</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form action="/dashboard/relatorios" method="get">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Select name="tipo" defaultValue={searchParams.tipo || "estoque"}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Tipo de relatório" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="estoque">Relatório de Estoque</SelectItem>
-                  <SelectItem value="movimentacoes">Relatório de Movimentações</SelectItem>
-                  <SelectItem value="categorias">Relatório por Categoria</SelectItem>
-                  <SelectItem value="usuarios">Relatório por Usuário</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select name="periodo" defaultValue={searchParams.periodo || "mes"}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Período" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="hoje">Hoje</SelectItem>
-                  <SelectItem value="semana">Esta Semana</SelectItem>
-                  <SelectItem value="mes">Este Mês</SelectItem>
-                  <SelectItem value="trimestre">Este Trimestre</SelectItem>
-                  <SelectItem value="ano">Este Ano</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select name="categoria" defaultValue={searchParams.categoria || "all"}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as Categorias</SelectItem>
-                  {categorias?.map((categoria) => (
-                    <SelectItem key={categoria.id} value={categoria.id}>
-                      {categoria.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button type="submit" className="w-full cursor-pointer">
-                <FileText className="mr-2 h-4 w-4" />
-                Gerar Relatório
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+      <FiltrosRelatorio categorias={categorias || []} searchParams={searchParams} />
 
       {/* Gráfico de Estoque por Categoria */}
       <GraficoEstoque produtos={produtos || []} />

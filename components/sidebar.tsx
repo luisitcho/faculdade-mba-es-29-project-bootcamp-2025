@@ -12,7 +12,6 @@ import {
   Users,
   TrendingUp,
   FileText,
-  Settings,
   LogOut,
   Menu,
   X,
@@ -37,7 +36,6 @@ const navigation = [
 
 const adminNavigation = [
   { name: "Usuários", href: "/dashboard/usuarios", icon: Users },
-  { name: "Configurações", href: "/dashboard/configuracoes", icon: Settings },
 ]
 
 export function Sidebar({ user, profile }: SidebarProps) {

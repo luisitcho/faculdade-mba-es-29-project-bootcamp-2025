@@ -48,8 +48,8 @@ export function NotificationBell({ userId }: NotificationBellProps) {
 
     buscarNotificacoes()
 
-    // Atualizar a cada 30 segundos
-    const interval = setInterval(buscarNotificacoes, 30000)
+    // Atualizar a cada 10 segundos (mais frequente)
+    const interval = setInterval(buscarNotificacoes, 10000)
 
     return () => clearInterval(interval)
   }, [userId])
