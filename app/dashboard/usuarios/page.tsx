@@ -16,41 +16,80 @@ export default async function UsuariosPage({
 }: {
   searchParams: SearchParams
 }) {
-  const supabase = await createClient()
+  try {
+    const supabase = await createClient()
 
-  const { data, error } = await supabase.auth.getUser()
-  if (error || !data?.user) {
-    redirect("/auth/login")
-  }
+    // Verificar autenticação
+    const { data: authData, error: authError } = await supabase.auth.getUser()
+    if (authError || !authData?.user) {
+      console.error("Erro de autenticação:", authError)
+      redirect("/auth/login")
+    }
 
-  // Verificar se é admin ou super_admin
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
+    // Verificar se é admin ou super_admin
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", authData.user.id)
+      .single()
 
-  const isMainAdmin = profile?.email === "luishenrisc1@gmail.com" || profile?.perfil_acesso === "admin"
+    if (profileError) {
+      console.error("Erro ao buscar perfil do usuário:", profileError)
+      // Se o perfil não existe, redirecionar para login
+      redirect("/auth/login")
+    }
 
-  if (!isMainAdmin && profile?.perfil_acesso !== "super_admin") {
-    redirect("/dashboard")
-  }
+    if (!profile) {
+      console.error("Perfil do usuário não encontrado")
+      redirect("/auth/login")
+    }
 
-  // Construir query para usuários
-  let query = supabase.from("profiles").select("*")
+    const isMainAdmin = profile?.email === "luishenrisc1@gmail.com" || profile?.perfil_acesso === "admin"
 
-  // Aplicar filtros
-  if (searchParams.busca) {
-    query = query.or(`nome.ilike.%${searchParams.busca}%,email.ilike.%${searchParams.busca}%`)
-  }
+    if (!isMainAdmin && profile?.perfil_acesso !== "super_admin") {
+      redirect("/dashboard")
+    }
 
-  if (searchParams.status === "ativo") {
-    query = query.eq("ativo", true)
-  } else if (searchParams.status === "inativo") {
-    query = query.eq("ativo", false)
-  }
+    // Construir query para usuários
+    let query = supabase.from("profiles").select("*")
 
-  if (searchParams.perfil) {
-    query = query.eq("perfil_acesso", searchParams.perfil)
-  }
+    // Aplicar filtros
+    if (searchParams.busca) {
+      query = query.or(`nome.ilike.%${searchParams.busca}%,email.ilike.%${searchParams.busca}%`)
+    }
 
-  const { data: usuarios } = await query.order("created_at", { ascending: false })
+    if (searchParams.status === "ativo") {
+      query = query.eq("ativo", true)
+    } else if (searchParams.status === "inativo") {
+      query = query.eq("ativo", false)
+    }
+
+    if (searchParams.perfil) {
+      query = query.eq("perfil_acesso", searchParams.perfil)
+    }
+
+    const { data: usuarios, error: usuariosError } = await query.order("created_at", { ascending: false })
+
+    if (usuariosError) {
+      console.error("Erro ao buscar usuários:", usuariosError)
+      // Retornar página com erro, mas sem quebrar a aplicação
+      return (
+        <div className="flex-1 space-y-6 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Gerenciar Usuários</h1>
+              <p className="text-muted-foreground">Visualize e gerencie os usuários do sistema</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-red-600 mb-2">Erro ao carregar usuários</h2>
+              <p className="text-muted-foreground">Não foi possível carregar a lista de usuários. Tente novamente mais tarde.</p>
+            </div>
+          </div>
+        </div>
+      )
+    }
 
   // Estatísticas
   const totalUsuarios = usuarios?.length || 0
@@ -161,4 +200,24 @@ export default async function UsuariosPage({
       />
     </div>
   )
+  } catch (error) {
+    console.error("Erro geral na página de usuários:", error)
+    return (
+      <div className="flex-1 space-y-6 p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Gerenciar Usuários</h1>
+            <p className="text-muted-foreground">Visualize e gerencie os usuários do sistema</p>
+          </div>
+        </div>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-red-600 mb-2">Erro interno do servidor</h2>
+            <p className="text-muted-foreground">Ocorreu um erro inesperado. Tente novamente mais tarde.</p>
+            <p className="text-sm text-muted-foreground mt-2">Digest: {Math.random().toString(36).substr(2, 9)}</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 }

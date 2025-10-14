@@ -6,15 +6,26 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
+  try {
+    const supabase = await createClient()
 
-  const { data, error } = await supabase.auth.getUser()
-  if (error || !data?.user) {
-    redirect("/auth/login")
-  }
+    const { data, error } = await supabase.auth.getUser()
+    if (error || !data?.user) {
+      console.error("Erro de autenticação no dashboard:", error)
+      redirect("/auth/login")
+    }
 
-  // Buscar dados do perfil do usuário
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
+    // Buscar dados do perfil do usuário
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", data.user.id)
+      .single()
+
+    if (profileError) {
+      console.error("Erro ao buscar perfil no dashboard:", profileError)
+      redirect("/auth/login")
+    }
 
   const isMainAdmin = profile?.email === "luishenrisc1@gmail.com" && profile?.perfil_acesso === "admin"
 
@@ -257,4 +268,8 @@ export default async function DashboardPage() {
       </Card>
     </div>
   )
+  } catch (error) {
+    console.error("Erro geral no dashboard:", error)
+    redirect("/auth/login")
+  }
 }
