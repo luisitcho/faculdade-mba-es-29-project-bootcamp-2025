@@ -43,14 +43,12 @@ interface Usuario {
 interface GestaoUsuariosListProps {
   usuarios: Usuario[]
   currentUserProfile: any
-  getPerfilColor: (perfil: string) => string
-  isMainAdmin: boolean // Adicionado prop para identificar admin principal
+  isMainAdmin: boolean
 }
 
 export function GestaoUsuariosList({
   usuarios,
   currentUserProfile,
-  getPerfilColor,
   isMainAdmin,
 }: GestaoUsuariosListProps) {
   const [editandoUsuario, setEditandoUsuario] = useState<Usuario | null>(null)
@@ -58,6 +56,22 @@ export function GestaoUsuariosList({
   const [novoPerfil, setNovoPerfil] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+
+  // ✅ Função movida para cá (era prop antes)
+  const getPerfilColor = (perfil: string) => {
+    switch (perfil) {
+      case "super_admin":
+        return "bg-purple-100 text-purple-800"
+      case "admin":
+        return "bg-red-100 text-red-800"
+      case "operador":
+        return "bg-blue-100 text-blue-800"
+      case "consulta":
+        return "bg-green-100 text-green-800"
+      default:
+        return "bg-gray-100 text-gray-800"
+    }
+  }
 
   const getPerfilHierarchy = (perfil: string) => {
     switch (perfil) {
@@ -192,7 +206,9 @@ export function GestaoUsuariosList({
                 <Badge className={getPerfilColor(usuario.perfil_acesso)}>
                   {formatPerfilName(usuario.perfil_acesso)}
                 </Badge>
-                <Badge variant={usuario.ativo ? "default" : "secondary"}>{usuario.ativo ? "Ativo" : "Inativo"}</Badge>
+                <Badge variant={usuario.ativo ? "default" : "secondary"}>
+                  {usuario.ativo ? "Ativo" : "Inativo"}
+                </Badge>
 
                 {canEditUser(usuario) && (
                   <div className="flex gap-1">

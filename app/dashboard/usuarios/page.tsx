@@ -36,7 +36,6 @@ export default async function UsuariosPage({
 
     if (profileError) {
       console.error("Erro ao buscar perfil do usuário:", profileError)
-      // Se o perfil não existe, redirecionar para login
       redirect("/auth/login")
     }
 
@@ -74,7 +73,6 @@ export default async function UsuariosPage({
 
     if (usuariosError) {
       console.error("Erro ao buscar usuários:", usuariosError)
-      // Retornar página com erro, mas sem quebrar a aplicação
       return (
         <div className="flex-1 space-y-6 p-6">
           <div className="flex items-center justify-between">
@@ -99,115 +97,99 @@ export default async function UsuariosPage({
       return <SetupInicial />
     }
 
-  // Estatísticas
-  const totalUsuarios = usuarios?.length || 0
-  const usuariosAtivos = usuarios?.filter((u) => u.ativo).length || 0
-  const usuariosInativos = usuarios?.filter((u) => !u.ativo).length || 0
-  const admins = usuarios?.filter((u) => u.perfil_acesso === "admin" || u.perfil_acesso === "super_admin").length || 0
+    // Estatísticas
+    const totalUsuarios = usuarios?.length || 0
+    const usuariosAtivos = usuarios?.filter((u) => u.ativo).length || 0
+    const usuariosInativos = usuarios?.filter((u) => !u.ativo).length || 0
+    const admins = usuarios?.filter((u) => u.perfil_acesso === "admin" || u.perfil_acesso === "super_admin").length || 0
 
-  const getPerfilColor = (perfil: string) => {
-    switch (perfil) {
-      case "super_admin":
-        return "bg-purple-100 text-purple-800"
-      case "admin":
-        return "bg-red-100 text-red-800"
-      case "operador":
-        return "bg-blue-100 text-blue-800"
-      case "consulta":
-        return "bg-green-100 text-green-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
-
-  return (
-    <div className="flex-1 space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Gerenciar Usuários</h1>
-          <p className="text-muted-foreground">Visualize e gerencie os usuários do sistema</p>
+    return (
+      <div className="flex-1 space-y-6 p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Gerenciar Usuários</h1>
+            <p className="text-muted-foreground">Visualize e gerencie os usuários do sistema</p>
+          </div>
         </div>
-      </div>
 
-      {/* Estatísticas */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* Estatísticas */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalUsuarios}</div>
+              <p className="text-xs text-muted-foreground">Usuários cadastrados</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Usuários Ativos</CardTitle>
+              <UserCheck className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">{usuariosAtivos}</div>
+              <p className="text-xs text-muted-foreground">Contas ativas</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Usuários Inativos</CardTitle>
+              <UserX className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">{usuariosInativos}</div>
+              <p className="text-xs text-muted-foreground">Contas inativas</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Administradores</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-purple-600">{admins}</div>
+              <p className="text-xs text-muted-foreground">Admins e Super Admins</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filtros */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle>Filtros</CardTitle>
+            <CardDescription>Filtre usuários por nome, email, status ou perfil</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalUsuarios}</div>
-            <p className="text-xs text-muted-foreground">Usuários cadastrados</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Usuários Ativos</CardTitle>
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{usuariosAtivos}</div>
-            <p className="text-xs text-muted-foreground">Contas ativas</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Usuários Inativos</CardTitle>
-            <UserX className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{usuariosInativos}</div>
-            <p className="text-xs text-muted-foreground">Contas inativas</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Administradores</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">{admins}</div>
-            <p className="text-xs text-muted-foreground">Admins e Super Admins</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filtros */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtros</CardTitle>
-          <CardDescription>Filtre usuários por nome, email, status ou perfil</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4 md:flex-row">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por nome ou email..."
-                  className="pl-10"
-                  defaultValue={searchParams.busca}
-                  name="busca"
-                />
+            <div className="flex flex-col gap-4 md:flex-row">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por nome ou email..."
+                    className="pl-10"
+                    defaultValue={searchParams.busca}
+                    name="busca"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Lista de Usuários */}
-      <GestaoUsuariosList
-        usuarios={usuarios || []}
-        currentUserProfile={profile}
-        getPerfilColor={getPerfilColor}
-        isMainAdmin={isMainAdmin}
-      />
-    </div>
-  )
+        {/* Lista de Usuários */}
+        <GestaoUsuariosList
+          usuarios={usuarios || []}
+          currentUserProfile={profile}
+          isMainAdmin={isMainAdmin}
+        />
+      </div>
+    )
   } catch (error) {
     console.error("Erro geral na página de usuários:", error)
     return (
