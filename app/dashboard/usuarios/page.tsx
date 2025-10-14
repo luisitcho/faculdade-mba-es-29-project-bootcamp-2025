@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Search, Users, UserCheck, UserX } from "lucide-react"
 import { GestaoUsuariosList } from "@/components/gestao-usuarios-list"
+import { SetupInicial } from "@/components/setup-inicial"
 
 interface SearchParams {
   busca?: string
@@ -45,8 +46,9 @@ export default async function UsuariosPage({
     }
 
     const isMainAdmin = profile?.email === "luishenrisc1@gmail.com" || profile?.perfil_acesso === "admin"
+    const isSuperAdmin = profile?.perfil_acesso === "super_admin"
 
-    if (!isMainAdmin && profile?.perfil_acesso !== "super_admin") {
+    if (!isMainAdmin && !isSuperAdmin) {
       redirect("/dashboard")
     }
 
@@ -85,10 +87,16 @@ export default async function UsuariosPage({
             <div className="text-center">
               <h2 className="text-xl font-semibold text-red-600 mb-2">Erro ao carregar usuários</h2>
               <p className="text-muted-foreground">Não foi possível carregar a lista de usuários. Tente novamente mais tarde.</p>
+              <p className="text-sm text-muted-foreground mt-2">Erro: {usuariosError.message}</p>
             </div>
           </div>
         </div>
       )
+    }
+
+    // Se não há usuários cadastrados, mostrar setup inicial
+    if (!usuarios || usuarios.length === 0) {
+      return <SetupInicial />
     }
 
   // Estatísticas
