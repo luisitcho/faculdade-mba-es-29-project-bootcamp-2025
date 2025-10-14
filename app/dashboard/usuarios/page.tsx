@@ -27,34 +27,29 @@ export default async function UsuariosPage({
       redirect("/auth/login")
     }
 
-    // Verificar se é admin ou super_admin
+    // Buscar perfil
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", authData.user.id)
       .single()
 
-    if (profileError) {
+    if (profileError || !profile) {
       console.error("Erro ao buscar perfil do usuário:", profileError)
       redirect("/auth/login")
     }
 
-    if (!profile) {
-      console.error("Perfil do usuário não encontrado")
-      redirect("/auth/login")
-    }
-
-    const isMainAdmin = profile?.email === "luishenrisc1@gmail.com" || profile?.perfil_acesso === "admin"
+    const isMainAdmin =
+      profile?.email === "luishenrisc1@gmail.com" || profile?.perfil_acesso === "admin"
     const isSuperAdmin = profile?.perfil_acesso === "super_admin"
 
     if (!isMainAdmin && !isSuperAdmin) {
       redirect("/dashboard")
     }
 
-    // Construir query para usuários
+    // Construir query de usuários
     let query = supabase.from("profiles").select("*")
 
-    // Aplicar filtros
     if (searchParams.busca) {
       query = query.or(`nome.ilike.%${searchParams.busca}%,email.ilike.%${searchParams.busca}%`)
     }
@@ -84,7 +79,7 @@ export default async function UsuariosPage({
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <h2 className="text-xl font-semibold text-red-600 mb-2">Erro ao carregar usuários</h2>
-              <p className="text-muted-foreground">Não foi possível carregar a lista de usuários. Tente novamente mais tarde.</p>
+              <p className="text-muted-foreground">Não foi possível carregar a lista de usuários.</p>
               <p className="text-sm text-muted-foreground mt-2">Erro: {usuariosError.message}</p>
             </div>
           </div>
@@ -92,16 +87,15 @@ export default async function UsuariosPage({
       )
     }
 
-    // Se não há usuários cadastrados, mostrar setup inicial
     if (!usuarios || usuarios.length === 0) {
       return <SetupInicial />
     }
 
-    // Estatísticas
     const totalUsuarios = usuarios?.length || 0
     const usuariosAtivos = usuarios?.filter((u) => u.ativo).length || 0
     const usuariosInativos = usuarios?.filter((u) => !u.ativo).length || 0
-    const admins = usuarios?.filter((u) => u.perfil_acesso === "admin" || u.perfil_acesso === "super_admin").length || 0
+    const admins =
+      usuarios?.filter((u) => u.perfil_acesso === "admin" || u.perfil_acesso === "super_admin").length || 0
 
     return (
       <div className="flex-1 space-y-6 p-6">
@@ -166,20 +160,37 @@ export default async function UsuariosPage({
             <CardDescription>Filtre usuários por nome, email, status ou perfil</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col gap-4 md:flex-row">
-              <div className="flex-1">
+            {/* 🔧 Form funcional de busca com limpar */}
+            <form action="/dashboard/usuarios" method="get" className="flex flex-col gap-4 md:flex-row items-center">
+              <div className="flex-1 w-full">
                 <div className="relative">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Buscar por nome ou email..."
                     className="pl-10"
-                    defaultValue={searchParams.busca}
                     name="busca"
+                    defaultValue={searchParams.busca || ""}
                   />
                 </div>
               </div>
-            </div>
+
+              <div className="flex gap-2 md:gap-2 w-full md:w-auto">
+                <button
+                  type="submit"
+                  className="h-10 px-4 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition flex items-center justify-center"
+                >
+                  Buscar
+                </button>
+                <a
+                  href="/dashboard/usuarios"
+                  className="h-10 px-4 rounded-md border border-input bg-background text-muted-foreground hover:bg-muted/5 transition flex items-center justify-center"
+                >
+                  Limpar
+                </a>
+              </div>
+            </form>
           </CardContent>
+
         </Card>
 
         {/* Lista de Usuários */}
@@ -204,7 +215,9 @@ export default async function UsuariosPage({
           <div className="text-center">
             <h2 className="text-xl font-semibold text-red-600 mb-2">Erro interno do servidor</h2>
             <p className="text-muted-foreground">Ocorreu um erro inesperado. Tente novamente mais tarde.</p>
-            <p className="text-sm text-muted-foreground mt-2">Digest: {Math.random().toString(36).substr(2, 9)}</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Digest: {Math.random().toString(36).substr(2, 9)}
+            </p>
           </div>
         </div>
       </div>
