@@ -79,20 +79,15 @@ export function ProdutosList({ produtos, podeEditar }: ProdutosListProps) {
   const handleSalvarEstoque = async (produtoId: string) => {
     const supabase = createClient()
     setIsLoading(true)
-    const estoqueValue = Number.parseInt(novoEstoque)
-
-    if (Number.isNaN(estoqueValue) || estoqueValue < 0) {
-      console.error("Estoque inválido. Deve ser um número inteiro não negativo.")
-      setIsLoading(false)
-      return
-    }
 
     try {
       const { error } = await supabase
         .from("produtos")
-        .update({ estoque_atual: estoqueValue })
+        .update({ estoque_atual: Number.parseInt(novoEstoque) })
         .eq("id", produtoId)
+
       if (error) throw error
+
       setEditandoEstoque(null)
       router.refresh()
     } catch (error) {
@@ -110,9 +105,12 @@ export function ProdutosList({ produtos, podeEditar }: ProdutosListProps) {
   const handleRemoverProduto = async (produtoId: string) => {
     const supabase = createClient()
     setIsLoading(true)
+
     try {
       const { error } = await supabase.from("produtos").update({ ativo: false }).eq("id", produtoId)
+
       if (error) throw error
+
       router.refresh()
     } catch (error) {
       console.error("Erro ao remover produto:", error)
@@ -146,11 +144,6 @@ export function ProdutosList({ produtos, podeEditar }: ProdutosListProps) {
       {produtos.map((produto) => {
         const estoqueStatus = getEstoqueStatus(produto.estoque_atual, produto.estoque_minimo)
         const estoqueBaixo = produto.estoque_atual <= produto.estoque_minimo
-        const isSaveDisabled =
-          isLoading ||
-          novoEstoque === "" ||
-          Number.isNaN(Number.parseInt(novoEstoque)) ||
-          Number.parseInt(novoEstoque) < 0
 
         return (
           <Card key={produto.id} className={estoqueBaixo ? "border-orange-200" : ""}>
@@ -163,9 +156,7 @@ export function ProdutosList({ produtos, podeEditar }: ProdutosListProps) {
                 {estoqueBaixo && <AlertTriangle className="h-5 w-5 text-orange-500 flex-shrink-0 ml-2" />}
               </div>
               <div className="flex gap-2">
-                <Badge className={getCategoriaColor(produto.categorias?.nome || "")}>
-                  {produto.categorias?.nome || "Sem Categoria"}
-                </Badge>
+                <Badge className={getCategoriaColor(produto.categorias.nome)}>{produto.categorias.nome}</Badge>
                 <Badge className={estoqueStatus.color}>{estoqueStatus.text}</Badge>
               </div>
             </CardHeader>
@@ -187,7 +178,7 @@ export function ProdutosList({ produtos, podeEditar }: ProdutosListProps) {
                         variant="ghost"
                         className="h-8 w-8 p-0"
                         onClick={() => handleSalvarEstoque(produto.id)}
-                        disabled={isSaveDisabled}
+                        disabled={isLoading}
                       >
                         <Save className="h-3 w-3" />
                       </Button>
@@ -223,10 +214,7 @@ export function ProdutosList({ produtos, podeEditar }: ProdutosListProps) {
               <div className="text-sm">
                 <p className="text-muted-foreground">Valor Unitário</p>
                 <p className="font-medium">
-                  {produto.valor_unitario
-                    ? `${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(produto.valor_unitario)}`
-                    : "Não informado"}
-
+                  {produto.valor_unitario ? `R$ ${produto.valor_unitario.toFixed(2)}` : "Não informado"}
                 </p>
               </div>
               {podeEditar && (

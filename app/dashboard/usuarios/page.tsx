@@ -18,37 +18,26 @@ export default async function UsuariosPage({
 }) {
   const supabase = await createClient()
 
-  // Autenticação
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
+  const { data, error } = await supabase.auth.getUser()
+  if (error || !data?.user) {
     redirect("/auth/login")
   }
-  const user = authData.user
 
-  // Buscar perfil
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single()
+  // Verificar se é admin ou super_admin
+  const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
 
-  const isMainAdmin =
-    (profile?.email === "admin@admin.com" ||
-      profile?.email === "luishenrisc1@gmail.com") &&
-    profile?.perfil_acesso === "admin"
+  const isMainAdmin = profile?.email === "admin@admin.com" && profile?.perfil_acesso === "admin"
 
   if (!isMainAdmin && profile?.perfil_acesso !== "super_admin") {
     redirect("/dashboard")
   }
 
-  // Construir query de usuários
+  // Construir query para usuários
   let query = supabase.from("profiles").select("*")
 
+  // Aplicar filtros
   if (searchParams.busca) {
-    // A maneira correta de usar .or() para pesquisa com ILIKE
-    query = query.or(
-      `nome.ilike.%${searchParams.busca}%,email.ilike.%${searchParams.busca}%`
-    )
+    query = query.or(`nome.ilike.%${searchParams.busca}%,email.ilike.%${searchParams.busca}%`)
   }
 
   if (searchParams.status === "ativo") {
@@ -61,20 +50,13 @@ export default async function UsuariosPage({
     query = query.eq("perfil_acesso", searchParams.perfil)
   }
 
-  const { data: usuarios, error: usuariosError } = await query.order(
-    "created_at",
-    { ascending: false }
-  )
-
-  const usuariosList = usuarios ?? []
+  const { data: usuarios } = await query.order("created_at", { ascending: false })
 
   // Estatísticas
-  const totalUsuarios = usuariosList.length
-  const usuariosAtivos = usuariosList.filter((u) => u.ativo).length
-  const usuariosInativos = usuariosList.filter((u) => !u.ativo).length
-  const admins = usuariosList.filter(
-    (u) => u.perfil_acesso === "admin" || u.perfil_acesso === "super_admin"
-  ).length
+  const totalUsuarios = usuarios?.length || 0
+  const usuariosAtivos = usuarios?.filter((u) => u.ativo).length || 0
+  const usuariosInativos = usuarios?.filter((u) => !u.ativo).length || 0
+  const admins = usuarios?.filter((u) => u.perfil_acesso === "admin" || u.perfil_acesso === "super_admin").length || 0
 
   const getPerfilColor = (perfil: string) => {
     switch (perfil) {
@@ -96,9 +78,7 @@ export default async function UsuariosPage({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Gerenciar Usuários</h1>
-          <p className="text-muted-foreground">
-            Visualize e gerencie os usuários do sistema - Acesso restrito a administradores
-          </p>
+          <p className="text-muted-foreground">Visualize e gerencie os usuários do sistema</p>
         </div>
       </div>
 
@@ -174,7 +154,7 @@ export default async function UsuariosPage({
 
       {/* Lista de Usuários */}
       <GestaoUsuariosList
-        usuarios={usuariosList}
+        usuarios={usuarios || []}
         currentUserProfile={profile}
         getPerfilColor={getPerfilColor}
         isMainAdmin={isMainAdmin}

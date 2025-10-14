@@ -5,59 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Bell, BellOff, Check, AlertTriangle, Package, Settings } from "lucide-react"
 import { NotificacoesList } from "@/components/notificacoes-list"
-import { revalidatePath } from "next/cache"
-
-// Ação do servidor para marcar notificação como lida
-async function marcarComoLida(id: string) {
-  "use server"
-  
-  const supabase = await createClient()
-  
-  const { error } = await supabase
-    .from("notificacoes")
-    .update({ 
-      lida: true, 
-      updated_at: new Date().toISOString() 
-    })
-    .eq("id", id)
-
-  if (error) {
-    console.error("Erro ao marcar notificação como lida:", error)
-    return { success: false, error: error.message }
-  }
-
-  revalidatePath("/notificacoes")
-  return { success: true }
-}
-
-// Ação do servidor para marcar TODAS como lidas
-async function marcarTodasComoLidas() {
-  "use server"
-
-  const supabase = await createClient()
-
-  const { data: userData, error: userError } = await supabase.auth.getUser()
-  if (userError || !userData?.user) {
-    return { success: false, error: "Usuário não autenticado" }
-  }
-
-  const { error: updateError } = await supabase
-    .from("notificacoes")
-    .update({
-      lida: true,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("usuario_id", userData.user.id)
-    .eq("lida", false)
-
-  if (updateError) {
-    console.error("Erro ao marcar todas como lidas:", updateError)
-    return { success: false, error: updateError.message }
-  }
-
-  revalidatePath("/notificacoes")
-  return { success: true }
-}
 
 export default async function NotificacoesPage() {
   const supabase = await createClient()
@@ -77,7 +24,8 @@ export default async function NotificacoesPage() {
   // Estatísticas
   const totalNotificacoes = notificacoes?.length || 0
   const naoLidas = notificacoes?.filter((n) => !n.lida).length || 0
-  const estoqueBaixo = notificacoes?.filter((n) => n.tipo === "warning" && !n.lida).length || 0
+  const estoqueBaixo = notificacoes?.filter((n) => n.tipo === "estoque_baixo" && !n.lida).length || 0
+  const estoqueZero = notificacoes?.filter((n) => n.tipo === "estoque_zero" && !n.lida).length || 0
 
   return (
     <div className="flex-1 space-y-6 p-6">
@@ -91,14 +39,10 @@ export default async function NotificacoesPage() {
             <Settings className="mr-2 h-4 w-4" />
             Configurações
           </Button>
-          
-          {/* Botão para marcar TODAS como lidas */}
-          <form action={marcarTodasComoLidas}>
-            <Button type="submit">
-              <Check className="mr-2 h-4 w-4" />
-              Marcar Todas como Lidas
-            </Button>
-          </form>
+          <Button>
+            <Check className="mr-2 h-4 w-4" />
+            Marcar Todas como Lidas
+          </Button>
         </div>
       </div>
 
@@ -139,14 +83,12 @@ export default async function NotificacoesPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Outras</CardTitle>
+            <CardTitle className="text-sm font-medium">Sem Estoque</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-600">
-              {totalNotificacoes - estoqueBaixo}
-            </div>
-            <p className="text-xs text-muted-foreground">Outras notificações</p>
+            <div className="text-2xl font-bold text-red-600">{estoqueZero}</div>
+            <p className="text-xs text-muted-foreground">Produtos zerados</p>
           </CardContent>
         </Card>
       </div>
@@ -168,15 +110,21 @@ export default async function NotificacoesPage() {
             <Badge variant="outline" className="cursor-pointer hover:bg-muted">
               Estoque Baixo ({estoqueBaixo})
             </Badge>
+            <Badge variant="outline" className="cursor-pointer hover:bg-muted">
+              Sem Estoque ({estoqueZero})
+            </Badge>
+            <Badge variant="outline" className="cursor-pointer hover:bg-muted">
+              Movimentações
+            </Badge>
+            <Badge variant="outline" className="cursor-pointer hover:bg-muted">
+              Sistema
+            </Badge>
           </div>
         </CardContent>
       </Card>
 
-      {/* Lista de Notificações - Passando a função marcarComoLida */}
-      <NotificacoesList 
-        notificacoes={notificacoes || []} 
-        marcarComoLida={marcarComoLida}
-      />
+      {/* Lista de Notificações */}
+      <NotificacoesList notificacoes={notificacoes || []} />
     </div>
   )
 }

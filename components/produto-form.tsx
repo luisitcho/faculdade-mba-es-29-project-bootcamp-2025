@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -19,6 +19,11 @@ interface Categoria {
   nome: string
 }
 
+interface Unidade {
+  id: string
+  nome: string
+}
+
 interface ProdutoFormProps {
   categorias: Categoria[]
   produto?: any
@@ -28,6 +33,8 @@ export function ProdutoForm({ categorias, produto }: ProdutoFormProps) {
   const [nome, setNome] = useState(produto?.nome || "")
   const [descricao, setDescricao] = useState(produto?.descricao || "")
   const [categoriaId, setCategoriaId] = useState(produto?.categoria_id || "")
+  const [unidadeId, setUnidadeId] = useState(produto?.unidade_id || "")
+  const [unidades, setUnidades] = useState<Unidade[]>([])
   const [unidadeMedida, setUnidadeMedida] = useState(produto?.unidade_medida || "")
   const [estoqueMinimo, setEstoqueMinimo] = useState(produto?.estoque_minimo?.toString() || "0")
   const [estoqueAtual, setEstoqueAtual] = useState(produto?.estoque_atual?.toString() || "0")
@@ -35,6 +42,15 @@ export function ProdutoForm({ categorias, produto }: ProdutoFormProps) {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    const fetchUnidades = async () => {
+      const supabase = createClient()
+      const { data } = await supabase.from("unidades").select("id, nome").order("nome")
+      if (data) setUnidades(data)
+    }
+    fetchUnidades()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,33 +62,26 @@ export function ProdutoForm({ categorias, produto }: ProdutoFormProps) {
       const produtoData = {
         nome,
         descricao,
-        categoria_id: categoriaId || null, // evita enviar string vazia
+        categoria_id: categoriaId,
+        unidade_id: unidadeId,
         unidade_medida: unidadeMedida,
-        estoque_minimo: Number.isNaN(Number.parseInt(estoqueMinimo)) ? 0 : Number.parseInt(estoqueMinimo),
-        estoque_atual: Number.isNaN(Number.parseInt(estoqueAtual)) ? 0 : Number.parseInt(estoqueAtual),
-        valor_unitario: valorUnitario && !Number.isNaN(Number.parseFloat(valorUnitario))
-          ? Number.parseFloat(valorUnitario)
-          : null,
+        estoque_minimo: Number.parseInt(estoqueMinimo),
+        estoque_atual: Number.parseInt(estoqueAtual),
+        valor_unitario: valorUnitario ? Number.parseFloat(valorUnitario) : null,
       }
 
       let result
       if (produto) {
-        // Editar produto existente
         result = await supabase.from("produtos").update(produtoData).eq("id", produto.id)
       } else {
-        // Criar novo produto
         result = await supabase.from("produtos").insert([produtoData])
       }
 
-      if (result.error) {
-        console.error("Erro Supabase:", result.error) // log completo
-        throw result.error
-      }
+      if (result.error) throw result.error
 
       router.push("/dashboard/produtos")
-    } catch (error: any) {
-      console.error("Erro ao salvar produto:", error)
-      setError(error.message || "Erro ao salvar produto")
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Erro ao salvar produto")
     } finally {
       setIsLoading(false)
     }
@@ -111,7 +120,7 @@ export function ProdutoForm({ categorias, produto }: ProdutoFormProps) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="categoria">Categoria *</Label>
-                <Select value={categoriaId} onValueChange={setCategoriaId}>
+                <Select value={categoriaId} onValueChange={setCategoriaId} required>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a categoria" />
                   </SelectTrigger>
@@ -124,6 +133,22 @@ export function ProdutoForm({ categorias, produto }: ProdutoFormProps) {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="unidade">Unidade *</Label>
+              <Select value={unidadeId} onValueChange={setUnidadeId} required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a unidade" />
+                </SelectTrigger>
+                <SelectContent>
+                  {unidades.map((unidade) => (
+                    <SelectItem key={unidade.id} value={unidade.id}>
+                      {unidade.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

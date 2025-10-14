@@ -6,9 +6,20 @@ import { usePathname, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { LayoutDashboard, Package, Users, TrendingUp, FileText, Settings, LogOut, Menu, X, Bell } from "lucide-react"
+import {
+  LayoutDashboard,
+  Package,
+  Users,
+  TrendingUp,
+  FileText,
+  Settings,
+  LogOut,
+  Menu,
+  X,
+  Bell,
+  Building2,
+} from "lucide-react"
 import { NotificationBell } from "@/components/notification-bell"
-import { SidebarUserManagement } from "@/components/sidebar-user-management"
 
 interface SidebarProps {
   user: any
@@ -18,15 +29,16 @@ interface SidebarProps {
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Produtos", href: "/dashboard/produtos", icon: Package },
+  { name: "Unidades", href: "/dashboard/unidades", icon: Building2 },
   { name: "Movimentações", href: "/dashboard/movimentacoes", icon: TrendingUp },
   { name: "Notificações", href: "/dashboard/notificacoes", icon: Bell },
   { name: "Relatórios", href: "/dashboard/relatorios", icon: FileText },
 ]
 
-// const adminNavigation = [
-//   { name: "Usuários", href: "/dashboard/usuarios", icon: Users },
-//   { name: "Configurações", href: "/dashboard/configuracoes", icon: Settings },
-// ]
+const adminNavigation = [
+  { name: "Usuários", href: "/dashboard/usuarios", icon: Users },
+  { name: "Configurações", href: "/dashboard/configuracoes", icon: Settings },
+]
 
 export function Sidebar({ user, profile }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false)
@@ -39,8 +51,7 @@ export function Sidebar({ user, profile }: SidebarProps) {
     router.push("/auth/login")
   }
 
-  // const allNavigation = [...navigation, ...(profile?.perfil_acesso === "admin" ? adminNavigation : [])]
-  const allNavigation = [...navigation]
+  const allNavigation = [...navigation, ...(profile?.perfil_acesso === "admin" ? adminNavigation : [])]
 
   return (
     <>
@@ -80,12 +91,7 @@ export function Sidebar({ user, profile }: SidebarProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{profile?.nome || "Usuário"}</p>
-                <p className="text-xs text-muted-foreground capitalize">
-                  {profile?.perfil_acesso === "admin" ? "Administrador" : 
-                   profile?.perfil_acesso === "operador" ? "Operador" : 
-                   profile?.perfil_acesso === "consulta" ? "Consulta" : 
-                   profile?.perfil_acesso}
-                </p>
+                <p className="text-xs text-muted-foreground capitalize">{profile?.perfil_acesso}</p>
               </div>
             </div>
           </div>
@@ -112,11 +118,6 @@ export function Sidebar({ user, profile }: SidebarProps) {
               )
             })}
           </nav>
-
-          {/* User Management - Only for main admins */}
-          <div className="px-4">
-            <SidebarUserManagement currentUserProfile={profile} />
-          </div>
 
           {/* Logout */}
           <div className="p-4 border-t">

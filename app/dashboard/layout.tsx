@@ -17,40 +17,12 @@ export default async function DashboardLayout({
     redirect("/auth/login")
   }
 
-  // Buscar dados do perfil do usuário com cache busting
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", data.user.id)
-    .single()
-  
-  // Debug temporário
-  console.log("=== DEBUG PROFILE ===")
-  console.log("User ID:", data.user.id)
-  console.log("User email:", data.user.email)
-  console.log("Profile error:", profileError)
-  console.log("Raw profile from DB:", profile)
-  console.log("Profile is null?", profile === null)
-  console.log("Profile is undefined?", profile === undefined)
-  console.log("===================")
-  
-  // Fallback se não encontrar perfil
-  const userProfile = profile || {
-    id: data.user.id,
-    nome: data.user.email?.split('@')[0] || 'Usuário',
-    email: data.user.email || '',
-    perfil_acesso: 'consulta',
-    ativo: true
-  }
-  
-  // Debug do perfil final
-  console.log("Final userProfile:", userProfile)
-  console.log("Perfil acesso:", userProfile?.perfil_acesso)
-  console.log("Nome:", userProfile?.nome)
+  // Buscar dados do perfil do usuário
+  const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
 
   return (
     <div className="flex h-screen bg-background">
-      <Sidebar user={data.user} profile={userProfile} />
+      <Sidebar user={data.user} profile={profile} />
       <main className="flex-1 overflow-y-auto">{children}</main>
       <ToastNotifications userId={data.user.id} />
       <Toaster />

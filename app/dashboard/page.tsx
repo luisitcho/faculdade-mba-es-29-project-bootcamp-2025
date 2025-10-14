@@ -15,40 +15,24 @@ export default async function DashboardPage() {
 
   // Buscar dados do perfil do usuário
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", data.user.id).single()
-  
-  // Fallback se não encontrar perfil
-  const userProfile = profile || {
-    id: data.user.id,
-    nome: data.user.email?.split('@')[0] || 'Usuário',
-    email: data.user.email || '',
-    perfil_acesso: 'consulta',
-    ativo: true
-  }
 
-  const isMainAdmin = (userProfile?.email === "admin@admin.com" || userProfile?.email === "luishenrisc1@gmail.com") && userProfile?.perfil_acesso === "admin"
+  const isMainAdmin = profile?.email === "admin@admin.com" && profile?.perfil_acesso === "admin"
 
-  // Buscar estatísticas básicas - ATUALIZADO: seguindo a mesma lógica da página de produtos
-  const { count: totalProdutosCount } = await supabase
+  // Buscar estatísticas básicas
+  const { data: totalProdutos } = await supabase.from("produtos").select("id", { count: "exact" })
+
+  const { data: totalUsuarios } = await supabase.from("profiles").select("id", { count: "exact" })
+
+  const { data: produtosBaixoEstoque } = await supabase
     .from("produtos")
-    .select("*", { count: 'exact', head: true })
-    .eq("ativo", true)
+    .select("id", { count: "exact" })
+    .lt("estoque_atual", "estoque_minimo")
 
-  const { count: totalUsuariosCount } = await supabase
-    .from("profiles")
-    .select("*", { count: 'exact', head: true })
-
-  // Produtos com estoque baixo (≤ 3) - ATUALIZADO
-  const { count: produtosBaixoEstoqueCount } = await supabase
-    .from("produtos")
-    .select("*", { count: 'exact', head: true })
-    .lte("estoque_atual", 3)
-    .eq("ativo", true)
-
-  // Movimentações de hoje - ATUALIZADO
+  // Movimentações de hoje
   const hoje = new Date().toISOString().split("T")[0]
-  const { count: movimentacoesHojeCount } = await supabase
+  const { data: movimentacoesHoje } = await supabase
     .from("movimentacoes")
-    .select("*", { count: 'exact', head: true })
+    .select("tipo_movimentacao", { count: "exact" })
     .gte("created_at", `${hoje}T00:00:00`)
     .lt("created_at", `${hoje}T23:59:59`)
 
@@ -65,7 +49,7 @@ export default async function DashboardPage() {
     .order("created_at", { ascending: false })
     .limit(5)
 
-  // Produtos com estoque baixo (≤ 3) - ATUALIZADO
+  // Produtos com estoque baixo
   const { data: produtosAlerta } = await supabase
     .from("produtos")
     .select(`
@@ -74,9 +58,8 @@ export default async function DashboardPage() {
         nome
       )
     `)
-    .lte("estoque_atual", 3)
+    .lte("estoque_atual", "estoque_minimo")
     .eq("ativo", true)
-    .order("estoque_atual", { ascending: true })
     .limit(5)
 
   return (
@@ -85,7 +68,7 @@ export default async function DashboardPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
-            Bem-vindo, {userProfile?.nome || "Usuário"}! Perfil: {userProfile?.perfil_acesso}
+            Bem-vindo, {profile?.nome || "Usuário"}! Perfil: {profile?.perfil_acesso}
           </p>
         </div>
         <div className="flex gap-2">
@@ -102,8 +85,8 @@ export default async function DashboardPage() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalProdutosCount || 0}</div>
-            <p className="text-xs text-muted-foreground">Produtos ativos</p>
+            <div className="text-2xl font-bold">{totalProdutos?.length || 0}</div>
+            <p className="text-xs text-muted-foreground">Produtos cadastrados</p>
           </CardContent>
         </Card>
 
@@ -113,19 +96,19 @@ export default async function DashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalUsuariosCount || 0}</div>
+            <div className="text-2xl font-bold">{totalUsuarios?.length || 0}</div>
             <p className="text-xs text-muted-foreground">Usuários no sistema</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Estoque Baixo (≤ 3)</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-orange-600" />
+            <CardTitle className="text-sm font-medium">Estoque Baixo</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{produtosBaixoEstoqueCount || 0}</div>
-            <p className="text-xs text-muted-foreground">Precisam reposição urgente</p>
+            <div className="text-2xl font-bold text-orange-600">{produtosBaixoEstoque?.length || 0}</div>
+            <p className="text-xs text-muted-foreground">Produtos com estoque baixo</p>
           </CardContent>
         </Card>
 
@@ -135,7 +118,7 @@ export default async function DashboardPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{movimentacoesHojeCount || 0}</div>
+            <div className="text-2xl font-bold">{movimentacoesHoje?.length || 0}</div>
             <p className="text-xs text-muted-foreground">Entradas e saídas</p>
           </CardContent>
         </Card>
@@ -146,7 +129,7 @@ export default async function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-orange-500" />
-              Produtos com Estoque Baixo (≤ 3)
+              Produtos com Estoque Baixo
             </CardTitle>
             <CardDescription>Produtos que precisam de reposição urgente</CardDescription>
           </CardHeader>
@@ -160,9 +143,7 @@ export default async function DashboardPage() {
                   >
                     <div>
                       <p className="font-medium text-sm">{produto.nome}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {produto.categorias?.nome || 'Sem categoria'}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{produto.categorias.nome}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-medium text-orange-600">
@@ -204,10 +185,10 @@ export default async function DashboardPage() {
                       ) : (
                         <TrendingUp className="h-3 w-3 text-red-600 rotate-180" />
                       )}
-                      <span className="truncate">{mov.produtos?.nome || 'Produto não encontrado'}</span>
+                      <span className="truncate">{mov.produtos.nome}</span>
                     </div>
                     <span className="text-muted-foreground">
-                      {mov.quantidade} {mov.produtos?.unidade_medida || 'un'}
+                      {mov.quantidade} {mov.produtos.unidade_medida}
                     </span>
                   </div>
                 ))}
@@ -259,6 +240,14 @@ export default async function DashboardPage() {
                 Relatórios
               </Link>
             </Button>
+            {isMainAdmin && (
+              <Button asChild variant="outline" className="h-20 flex-col bg-transparent cursor-pointer">
+                <Link href="/dashboard/usuarios">
+                  <Users className="h-6 w-6 mb-2" />
+                  Gerenciar Usuários
+                </Link>
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

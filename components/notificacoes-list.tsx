@@ -1,122 +1,202 @@
-// components/notificacoes-list.tsx
 "use client"
 
-import { Button } from "@/components/ui/button"
+import { useState } from "react"
+import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Check, AlertTriangle, Info, Bell } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Bell, AlertTriangle, Package, TrendingUp, Settings, Check, Eye } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 interface Notificacao {
   id: string
+  tipo: string
   titulo: string
   mensagem: string
-  tipo: string
   lida: boolean
+  data_leitura: string | null
+  metadata: any
   created_at: string
 }
 
 interface NotificacoesListProps {
   notificacoes: Notificacao[]
-  marcarComoLida: (id: string) => Promise<{ success: boolean; error?: string }>
 }
 
-export function NotificacoesList({ notificacoes, marcarComoLida }: NotificacoesListProps) {
-  const handleMarcarComoLida = async (id: string) => {
-    const result = await marcarComoLida(id)
-    if (result.success) {
-      // Recarregar a página para refletir as mudanças
-      window.location.reload()
-    } else {
-      console.error("Erro ao marcar como lida:", result.error)
+export function NotificacoesList({ notificacoes }: NotificacoesListProps) {
+  const [isLoading, setIsLoading] = useState<string | null>(null)
+  const router = useRouter()
+
+  const marcarComoLida = async (notificacaoId: string) => {
+    setIsLoading(notificacaoId)
+    const supabase = createClient()
+
+    try {
+      const { error } = await supabase
+        .from("notificacoes")
+        .update({
+          lida: true,
+          data_leitura: new Date().toISOString(),
+        })
+        .eq("id", notificacaoId)
+
+      if (error) throw error
+
+      router.refresh()
+    } catch (error) {
+      console.error("Erro ao marcar notificação como lida:", error)
+    } finally {
+      setIsLoading(null)
     }
   }
 
-  const notificacoesNaoLidas = notificacoes.filter(n => !n.lida)
-  const notificacoesLidas = notificacoes.filter(n => n.lida)
+  const getTipoIcon = (tipo: string) => {
+    switch (tipo) {
+      case "estoque_baixo":
+        return <AlertTriangle className="h-4 w-4 text-orange-600" />
+      case "estoque_zero":
+        return <Package className="h-4 w-4 text-red-600" />
+      case "movimentacao":
+        return <TrendingUp className="h-4 w-4 text-blue-600" />
+      case "sistema":
+        return <Settings className="h-4 w-4 text-gray-600" />
+      default:
+        return <Bell className="h-4 w-4 text-muted-foreground" />
+    }
+  }
 
-  return (
-    <div className="space-y-6">
-      {/* Notificações Não Lidas */}
-      {notificacoesNaoLidas.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-orange-600">
-              <AlertTriangle className="h-5 w-5" />
-              Notificações Não Lidas ({notificacoesNaoLidas.length})
-            </CardTitle>
-            <CardDescription>Notificações que precisam de sua atenção</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {notificacoesNaoLidas.map((notificacao) => (
-              <div key={notificacao.id} className="flex items-center justify-between p-4 border border-orange-200 rounded-lg bg-orange-50">
-                <div className="flex items-start gap-3 flex-1">
-                  {notificacao.tipo === "warning" && <AlertTriangle className="h-5 w-5 text-orange-600 mt-0.5" />}
-                  {notificacao.tipo === "info" && <Info className="h-5 w-5 text-blue-600 mt-0.5" />}
-                  <div className="flex-1">
-                    <h4 className="font-medium text-orange-900">{notificacao.titulo}</h4>
-                    <p className="text-sm text-orange-800 mt-1">{notificacao.mensagem}</p>
-                    <p className="text-xs text-orange-700 mt-2">
-                      {new Date(notificacao.created_at).toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
-                  </div>
-                </div>
-                <Button 
-                  onClick={() => handleMarcarComoLida(notificacao.id)}
-                  size="sm" 
-                  variant="outline"
-                  className="ml-4"
-                >
-                  <Check className="h-4 w-4" />
-                  Marcar como lida
-                </Button>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+  const getTipoColor = (tipo: string) => {
+    switch (tipo) {
+      case "estoque_baixo":
+        return "bg-orange-100 text-orange-800"
+      case "estoque_zero":
+        return "bg-red-100 text-red-800"
+      case "movimentacao":
+        return "bg-blue-100 text-blue-800"
+      case "sistema":
+        return "bg-gray-100 text-gray-800"
+      default:
+        return "bg-gray-100 text-gray-800"
+    }
+  }
 
-      {/* Notificações Lidas */}
+  const getTipoLabel = (tipo: string) => {
+    switch (tipo) {
+      case "estoque_baixo":
+        return "Estoque Baixo"
+      case "estoque_zero":
+        return "Sem Estoque"
+      case "movimentacao":
+        return "Movimentação"
+      case "sistema":
+        return "Sistema"
+      default:
+        return "Notificação"
+    }
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
+
+  if (!notificacoes.length) {
+    return (
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-gray-600">
-            <Bell className="h-5 w-5" />
-            Notificações Lidas ({notificacoesLidas.length})
-          </CardTitle>
-          <CardDescription>Notificações já visualizadas</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {notificacoesLidas.length > 0 ? (
-            notificacoesLidas.map((notificacao) => (
-              <div key={notificacao.id} className="p-4 border border-gray-200 rounded-lg bg-gray-50 opacity-75">
-                <div className="flex items-start gap-3">
-                  {notificacao.tipo === "warning" && <AlertTriangle className="h-5 w-5 text-gray-600 mt-0.5" />}
-                  {notificacao.tipo === "info" && <Info className="h-5 w-5 text-gray-600 mt-0.5" />}
-                  <div>
-                    <h4 className="font-medium text-gray-700 line-through">{notificacao.titulo}</h4>
-                    <p className="text-sm text-gray-600 mt-1">{notificacao.mensagem}</p>
-                    <p className="text-xs text-gray-500 mt-2">
-                      {new Date(notificacao.created_at).toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-center text-muted-foreground py-8">Nenhuma notificação lida</p>
-          )}
+        <CardContent className="flex flex-col items-center justify-center py-12">
+          <div className="text-center">
+            <Bell className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+            <h3 className="text-lg font-medium text-muted-foreground mb-2">Nenhuma notificação</h3>
+            <p className="text-sm text-muted-foreground">Você não possui notificações no momento.</p>
+          </div>
         </CardContent>
       </Card>
-    </div>
+    )
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Suas Notificações</CardTitle>
+        <CardDescription>Lista de todas as suas notificações, das mais recentes para as mais antigas</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {notificacoes.map((notificacao) => (
+            <div
+              key={notificacao.id}
+              className={`flex items-start justify-between p-4 border rounded-lg transition-colors ${
+                !notificacao.lida ? "bg-blue-50 border-blue-200" : "bg-background"
+              }`}
+            >
+              <div className="flex items-start space-x-3 flex-1">
+                <div className="flex-shrink-0 mt-1">{getTipoIcon(notificacao.tipo)}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className="font-medium text-sm">{notificacao.titulo}</h4>
+                    <Badge className={getTipoColor(notificacao.tipo)}>{getTipoLabel(notificacao.tipo)}</Badge>
+                    {!notificacao.lida && <Badge variant="default">Nova</Badge>}
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">{notificacao.mensagem}</p>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span>{formatDate(notificacao.created_at)}</span>
+                    {notificacao.lida && notificacao.data_leitura && (
+                      <span>Lida em {formatDate(notificacao.data_leitura)}</span>
+                    )}
+                  </div>
+                  {/* Metadata adicional */}
+                  {notificacao.metadata &&
+                    (notificacao.tipo === "estoque_baixo" || notificacao.tipo === "estoque_zero") && (
+                      <div className="mt-2 p-2 bg-muted rounded-md text-xs">
+                        <p>
+                          <strong>Produto:</strong> {notificacao.metadata.produto_nome}
+                        </p>
+                        <p>
+                          <strong>Estoque atual:</strong> {notificacao.metadata.estoque_atual}{" "}
+                          {notificacao.metadata.unidade_medida}
+                        </p>
+                        <p>
+                          <strong>Estoque mínimo:</strong> {notificacao.metadata.estoque_minimo}{" "}
+                          {notificacao.metadata.unidade_medida}
+                        </p>
+                      </div>
+                    )}
+                </div>
+              </div>
+              <div className="flex items-center gap-2 ml-4">
+                {!notificacao.lida && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => marcarComoLida(notificacao.id)}
+                    disabled={isLoading === notificacao.id}
+                  >
+                    {isLoading === notificacao.id ? (
+                      "Marcando..."
+                    ) : (
+                      <>
+                        <Check className="h-3 w-3 mr-1" />
+                        Marcar como Lida
+                      </>
+                    )}
+                  </Button>
+                )}
+                {notificacao.lida && (
+                  <Badge variant="secondary" className="text-xs">
+                    <Eye className="h-3 w-3 mr-1" />
+                    Lida
+                  </Badge>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   )
 }
