@@ -116,7 +116,7 @@ export default async function RelatoriosPage({
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">R$ {valorTotalEstoque.toFixed(2)}</div>
+            <div className="text-2xl font-bold">{valorTotalEstoque.toLocaleString('pt-br',{style: 'currency', currency: 'BRL'})}</div>
             <p className="text-xs text-muted-foreground">Valor total em estoque</p>
           </CardContent>
         </Card>
