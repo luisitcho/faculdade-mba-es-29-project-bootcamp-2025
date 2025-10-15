@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { TrendingUp, TrendingDown, Activity, FileDown } from "lucide-react"
 import { exportarMovimentacoesParaExcel } from "@/lib/excel-export"
+import Link from "next/link"
 
 interface Movimentacao {
   id: string
@@ -108,10 +109,16 @@ export function RelatorioMovimentacoes({ movimentacoes }: RelatorioMovimentacoes
             <CardDescription>Resumo das movimentações do período atual</CardDescription>
           </div>
           {movimentacoes.length > 0 && (
-            <Button variant="outline" size="sm" onClick={handleExportarMovimentacoes}>
-              <FileDown className="mr-2 h-4 w-4" />
-              Exportar
+            <Button variant="outline" asChild>
+              <Link
+                href="/api/relatorios/movimentacoes/exportar"
+                target="_blank"
+              >
+                <FileDown className="mr-2 h-4 w-4" />
+                Exportar
+              </Link>
             </Button>
+
           )}
         </div>
       </CardHeader>

@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { AlertTriangle, Package, FileDown } from "lucide-react"
-import { exportarEstoqueBaixoParaExcel } from "@/lib/excel-export"
+// import { exportarEstoqueBaixoParaExcel } from "@/lib/excel-export"
 
 interface Produto {
   id: string
@@ -41,9 +41,9 @@ export function RelatorioEstoque({ produtos }: RelatorioEstoqueProps) {
     }
   }
 
-  const handleExportarEstoqueBaixo = () => {
-    exportarEstoqueBaixoParaExcel(produtos)
-  }
+  // const handleExportarEstoqueBaixo = () => {
+  //   exportarEstoqueBaixoParaExcel(produtos)
+  // }
 
   return (
     <Card>
@@ -57,10 +57,17 @@ export function RelatorioEstoque({ produtos }: RelatorioEstoqueProps) {
             <CardDescription>Produtos que precisam de atenção no estoque</CardDescription>
           </div>
           {produtosBaixoEstoque.length > 0 && (
-            <Button variant="outline" size="sm" onClick={handleExportarEstoqueBaixo}>
-              <FileDown className="mr-2 h-4 w-4" />
-              Exportar
+            <Button variant="outline" asChild>
+              <a
+                href="/api/relatorios/estoque/exportar/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <FileDown className="mr-2 h-4 w-4" />
+                Exportar
+              </a>
             </Button>
+
           )}
         </div>
       </CardHeader>

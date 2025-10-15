@@ -63,6 +63,17 @@ export const GET = async (req: NextRequest) => {
       });
     });
 
+    sheet.getRow(1).eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF1E293B" },
+      };
+      cell.alignment = { horizontal: "center" };
+    });
+
+
     const buffer = await workbook.xlsx.writeBuffer();
 
     return new Response(buffer, {
