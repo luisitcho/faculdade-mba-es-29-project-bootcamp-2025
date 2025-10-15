@@ -55,7 +55,8 @@ export default async function ProdutosPage({
   })
 
   // Estatísticas
-  const totalProdutos = produtos?.length || 0
+  // const totalProdutos = produtos?.length || 0
+  const { count: totalProdutos } = await supabase.from("produtos").select("*", { count: "exact", head: true })
   const produtosBaixoEstoque = produtos?.filter((p) => p.estoque_atual <= p.estoque_minimo).length || 0
   const valorTotalEstoque = produtos?.reduce((total, p) => total + p.estoque_atual * (p.valor_unitario || 0), 0) || 0
 
