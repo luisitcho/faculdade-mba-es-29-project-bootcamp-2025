@@ -77,9 +77,24 @@ export function RelatorioMovimentacoes({ movimentacoes }: RelatorioMovimentacoes
     }
   }
 
-  const handleExportarMovimentacoes = () => {
-    exportarMovimentacoesParaExcel(movimentacoes)
+  const handleExportarMovimentacoes = async () => {
+    try {
+      const response = await fetch("/api/relatorios/movimentacoes")
+      if (!response.ok) throw new Error("Erro ao exportar movimentações")
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `relatorio_movimentacoes_${new Date().toISOString().split("T")[0]}.xlsx`
+      a.click()
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error(err)
+      alert("Erro ao gerar o relatório.")
+    }
   }
+
 
   return (
     <Card>
