@@ -5,7 +5,7 @@ import { Calendar, TrendingUp, Package, AlertTriangle } from "lucide-react"
 import { RelatorioEstoque } from "@/components/relatorio-estoque"
 import { RelatorioMovimentacoes } from "@/components/relatorio-movimentacoes"
 import { GraficoEstoque } from "@/components/grafico-estoque"
-import { ExportarRelatoriosButton } from "@/components/exportar-relatorios-button"
+// import { ExportarRelatoriosButton } from "@/components/exportar-relatorios-button"
 import { FiltrosRelatorio } from "@/components/filtros-relatorio"
 
 export const dynamic = 'force-dynamic'
