@@ -168,15 +168,19 @@ export default async function DashboardPage() {
                           </p>
                           <p className="text-xs text-muted-foreground">Mín: {produto.estoque_minimo}</p>
                         </div>
-                        <Button
-                          asChild
-                          size="sm"
-                          variant="outline"
-                        >
-                          <Link href={`/dashboard/produtos/${produto.id}/editar/`}>Editar</Link>
-                        </Button>
+
+                        {(isMainAdmin || profile?.perfil_acesso === "admin" || profile?.perfil_acesso === "operador") && (
+                          <Button
+                            asChild
+                            size="sm"
+                            variant="outline"
+                          >
+                            <Link href={`/dashboard/produtos/${produto.id}/editar/`}>Editar</Link>
+                          </Button>
+                        )}
                       </div>
                     </div>
+
                   ))}
                 </div>
               ) : (
