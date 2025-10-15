@@ -85,7 +85,7 @@ export default async function RelatoriosPage({
           <h1 className="text-3xl font-bold tracking-tight">Relatórios e Análises</h1>
           <p className="text-muted-foreground">Visualize dados e gere relatórios do sistema de estoque</p>
         </div>
-        <ExportarRelatoriosButton produtos={produtos || []} movimentacoes={movimentacoes || []} />
+        {/* <ExportarRelatoriosButton produtos={produtos || []} movimentacoes={movimentacoes || []} /> */}
       </div>
 
       {/* Resumo Executivo */}
