@@ -64,6 +64,38 @@ export default async function ProdutosPage({
     profile?.perfil_acesso === "admin" ||
     profile?.perfil_acesso === "operador"
 
+  // 🔔 NOVO BLOCO: registrar notificações de estoque baixo (apenas uma vez por produto)
+  if (produtos && produtos.length > 0) {
+    for (const produto of produtos) {
+      if (produto.estoque_atual <= produto.estoque_minimo) {
+        const titulo = "Estoque Baixo"
+        const mensagem = `O produto ${produto.nome} está com apenas ${produto.estoque_atual} unidades em estoque.`
+
+        // Verifica se já existe notificação igual
+        const { data: notificacaoExistente } = await supabase
+          .from("notificacoes")
+          .select("id")
+          .eq("usuario_id", profile?.id)
+          .eq("titulo", titulo)
+          .eq("mensagem", mensagem)
+          .maybeSingle()
+
+        // Se não existir, cria uma nova
+        if (!notificacaoExistente) {
+          await supabase.from("notificacoes").insert([
+            {
+              usuario_id: profile?.id,
+              titulo,
+              mensagem,
+              tipo: "warning",
+              lida: false,
+            },
+          ])
+        }
+      }
+    }
+  }
+
   return (
     <div className="flex-1 space-y-6 p-6">
       <div className="flex items-center justify-between">
@@ -119,7 +151,9 @@ export default async function ProdutosPage({
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{valorTotalEstoque.toLocaleString('pt-br',{style: 'currency', currency: 'BRL'})}</div>
+            <div className="text-2xl font-bold">
+              {valorTotalEstoque.toLocaleString("pt-br", { style: "currency", currency: "BRL" })}
+            </div>
             <p className="text-xs text-muted-foreground">Valor em estoque</p>
           </CardContent>
         </Card>

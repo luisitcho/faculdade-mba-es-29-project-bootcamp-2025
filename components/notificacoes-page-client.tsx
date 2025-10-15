@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Bell, BellOff, Check, AlertTriangle, Package, Settings } from "lucide-react"
+import { Bell, BellOff, Check, AlertTriangle, Package } from "lucide-react"
 import { NotificacoesList } from "@/components/notificacoes-list"
 import { useRouter } from "next/navigation"
 
@@ -26,68 +26,87 @@ export function NotificacoesPageClient() {
   const [isMarkingAll, setIsMarkingAll] = useState(false)
   const router = useRouter()
 
+  const supabase = createClient()
+
   const buscarNotificacoes = async () => {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) return
+    try {
+      const userRes = await supabase.auth.getUser()
+      const user = userRes.data.user
+      if (!user) return
 
-    const { data } = await supabase
-      .from("notificacoes")
-      .select("*")
-      .eq("usuario_id", user.id)
-      .order("created_at", { ascending: false })
+      const { data } = await supabase
+        .from("notificacoes")
+        .select("*")
+        .eq("usuario_id", user.id)
+        .order("created_at", { ascending: false })
 
-    setNotificacoes(data || [])
-    setIsLoading(false)
+      setNotificacoes(data || [])
+    } catch (err) {
+      console.error("Erro ao buscar notificações:", err)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const marcarTodasComoLidas = async () => {
     setIsMarkingAll(true)
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) return
-
     try {
+      const userRes = await supabase.auth.getUser()
+      const user = userRes.data.user
+      if (!user) return
+
+      // Atualiza apenas lida: true
       const { error } = await supabase
         .from("notificacoes")
-        .update({
-          lida: true,
-          data_leitura: new Date().toISOString(),
-        })
+        .update({ lida: true })
         .eq("usuario_id", user.id)
         .eq("lida", false)
 
       if (error) throw error
 
-      // Atualizar estado local
-      setNotificacoes(prev => 
-        prev.map(n => ({ ...n, lida: true, data_leitura: new Date().toISOString() }))
-      )
-      
-      router.refresh()
-    } catch (error) {
-      console.error("Erro ao marcar todas como lidas:", error)
+      setNotificacoes(prev => prev.map(n => ({ ...n, lida: true })))
+    } catch (err) {
+      console.error("Erro ao marcar todas como lidas:", err)
     } finally {
       setIsMarkingAll(false)
     }
   }
 
+  // NOVO: marcar 1 notificação como lida
+  const marcarComoLida = async (notificacaoId: string) => {
+    if (!notificacaoId) return
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { error } = await supabase
+        .from("notificacoes")
+        .update({ lida: true })
+        .eq("usuario_id", user.id)
+        .eq("id", notificacaoId.toString()) // garante que é string
+
+      if (error) throw error
+
+      setNotificacoes(prev =>
+        prev.map(n => (n.id === notificacaoId ? { ...n, lida: true } : n))
+      )
+    } catch (err) {
+      console.error("Erro ao marcar notificação como lida:", err)
+    }
+  }
+
+
   useEffect(() => {
     buscarNotificacoes()
-
-    // Atualizar a cada 10 segundos
     const interval = setInterval(buscarNotificacoes, 10000)
-
     return () => clearInterval(interval)
   }, [])
 
-  // Estatísticas calculadas
+  // Estatísticas
   const totalNotificacoes = notificacoes.length
-  const naoLidas = notificacoes.filter((n) => !n.lida).length
-  const estoqueBaixo = notificacoes.filter((n) => n.tipo === "estoque_baixo" && !n.lida).length
-  const estoqueZero = notificacoes.filter((n) => n.tipo === "estoque_zero" && !n.lida).length
+  const naoLidas = notificacoes.filter(n => !n.lida).length
+  const estoqueBaixo = notificacoes.filter(n => n.titulo === "Estoque Baixo" && !n.lida).length
+  const estoqueZero = notificacoes.filter(n => n.titulo === "Sem Estoque" && !n.lida).length
 
   if (isLoading) {
     return (
@@ -117,7 +136,7 @@ export function NotificacoesPageClient() {
         </div>
       </div>
 
-      {/* Resumo de Notificações */}
+      {/* Estatísticas */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -164,38 +183,8 @@ export function NotificacoesPageClient() {
         </Card>
       </div>
 
-      {/* Filtros Rápidos */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtros Rápidos</CardTitle>
-          <CardDescription>Filtre notificações por tipo ou status</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="outline" className="cursor-pointer hover:bg-muted">
-              Todas ({totalNotificacoes})
-            </Badge>
-            <Badge variant="outline" className="cursor-pointer hover:bg-muted">
-              Não Lidas ({naoLidas})
-            </Badge>
-            <Badge variant="outline" className="cursor-pointer hover:bg-muted">
-              Estoque Baixo ({estoqueBaixo})
-            </Badge>
-            <Badge variant="outline" className="cursor-pointer hover:bg-muted">
-              Sem Estoque ({estoqueZero})
-            </Badge>
-            <Badge variant="outline" className="cursor-pointer hover:bg-muted">
-              Movimentações
-            </Badge>
-            <Badge variant="outline" className="cursor-pointer hover:bg-muted">
-              Sistema
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Lista de Notificações */}
-      <NotificacoesList notificacoes={notificacoes} />
+      <NotificacoesList notificacoes={notificacoes} marcarComoLida={marcarComoLida} />
     </div>
   )
 }
