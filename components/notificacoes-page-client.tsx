@@ -110,10 +110,6 @@ export function NotificacoesPageClient() {
           <p className="text-muted-foreground">Acompanhe alertas e notificações importantes do sistema</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">
-            <Settings className="mr-2 h-4 w-4" />
-            Configurações
-          </Button>
           <Button onClick={marcarTodasComoLidas} disabled={isMarkingAll || naoLidas === 0}>
             <Check className="mr-2 h-4 w-4" />
             {isMarkingAll ? "Marcando..." : "Marcar Todas como Lidas"}
