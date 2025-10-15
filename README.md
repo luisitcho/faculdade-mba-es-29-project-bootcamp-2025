@@ -111,8 +111,8 @@ npm run dev
 ## Acesso Padrão
 
 **Usuário Admin:**
-- Email: luishenrisc1@gmail.com
-- Senha: 123456
+- Email: admin@admin.com
+- Senha: admin123
 
 ## Estrutura do Projeto
 
