@@ -107,11 +107,15 @@ export default async function ProdutosPage({
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
-            <Link href="/dashboard/produtos/exportar">
+            <Link
+              href={`/api/produtos/exportar?categoria=${searchParams.categoria || "all"}&busca=${searchParams.busca || ""}`}
+              target="_blank"
+            >
               <FileDown className="mr-2 h-4 w-4" />
               Exportar
             </Link>
           </Button>
+
           {podeEditar && (
             <Button asChild>
               <Link href="/dashboard/produtos/novo">
