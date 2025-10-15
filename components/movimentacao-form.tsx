@@ -108,7 +108,7 @@ export function MovimentacaoForm({ produtos, tipo, userId }: MovimentacaoFormPro
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          {/* <CardTitle className="flex items-center gap-2">
             {tipo === "entrada" ? (
               <TrendingUp className="h-5 w-5 text-green-600" />
             ) : (
@@ -120,7 +120,7 @@ export function MovimentacaoForm({ produtos, tipo, userId }: MovimentacaoFormPro
             {tipo === "entrada"
               ? "Registre produtos que estão entrando no estoque"
               : "Registre produtos que estão saindo do estoque"}
-          </CardDescription>
+          </CardDescription> */}
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

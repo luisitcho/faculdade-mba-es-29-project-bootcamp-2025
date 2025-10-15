@@ -1,12 +1,9 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, TrendingUp, TrendingDown, Calendar } from "lucide-react"
-import Link from "next/link"
 import { MovimentacoesList } from "@/components/movimentacoes-list"
+import { MovimentacoesFilters } from "@/components/movimentacoes-filters" // Importe o novo componente
 
 export const dynamic = 'force-dynamic'
 
@@ -47,8 +44,15 @@ export default async function MovimentacoesPage({
     query = query.eq("tipo_movimentacao", searchParams.tipo)
   }
 
-  if (searchParams.produto) {
+  if (searchParams.produto && searchParams.produto !== "all") {
     query = query.eq("produto_id", searchParams.produto)
+  }
+
+  // *** NOVO: Adiciona o filtro por data ***
+  if (searchParams.data) {
+    const dataInicio = `${searchParams.data}T00:00:00`
+    const dataFim = `${searchParams.data}T23:59:59`
+    query = query.gte("created_at", dataInicio).lt("created_at", dataFim)
   }
 
   const { data: movimentacoes } = await query.order("created_at", { ascending: false }).limit(50)
@@ -84,51 +88,40 @@ export default async function MovimentacoesPage({
           <h1 className="text-3xl font-bold tracking-tight">Controle de Movimentações</h1>
           <p className="text-muted-foreground">Gerencie entradas e saídas de produtos do estoque</p>
         </div>
-        {podeEditar && (
-          <div className="flex gap-2">
-            <Button asChild variant="outline">
-              <Link href="/dashboard/movimentacoes/entrada">
-                <TrendingUp className="mr-2 h-4 w-4" />
-                Nova Entrada
-              </Link>
-            </Button>
-            <Button asChild>
-              <Link href="/dashboard/movimentacoes/saida">
-                <TrendingDown className="mr-2 h-4 w-4" />
-                Nova Saída
-              </Link>
-            </Button>
-          </div>
-        )}
+        {/* Seu código de botões aqui, se desejar reativá-lo */}
       </div>
 
       {/* Estatísticas do dia */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Entradas Hoje</CardTitle>
+            <CardTitle className="text-sm font-medium">Entradas no Estoque</CardTitle>
             <TrendingUp className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{totalEntradas}</div>
-            <p className="text-xs text-muted-foreground">{entradasHoje?.length || 0} movimentações</p>
+            <p className="text-xs text-muted-foreground">
+              {entradasHoje?.length || 0} movimentaç{(entradasHoje?.length || 0) === 1 ? 'ão' : 'ões'}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Saídas Hoje</CardTitle>
+            <CardTitle className="text-sm font-medium">Saídas no Estoque</CardTitle>
             <TrendingDown className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">{totalSaidas}</div>
-            <p className="text-xs text-muted-foreground">{saidasHoje?.length || 0} movimentações</p>
+            <p className="text-xs text-muted-foreground">
+              {saidasHoje?.length || 0} movimentaç{(saidasHoje?.length || 0) === 1 ? 'ão' : 'ões'}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Saldo do Dia</CardTitle>
+            <CardTitle className="text-sm font-medium">Entradas no Estoque</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -148,47 +141,15 @@ export default async function MovimentacoesPage({
             <Plus className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
+            {/* *** ALTERADO: Exibe o total de itens filtrados *** */}
             <div className="text-2xl font-bold">{movimentacoes?.length || 0}</div>
-            <p className="text-xs text-muted-foreground">Últimas 50 movimentações</p>
+            <p className="text-xs text-muted-foreground">Resultados encontrados</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filtros */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtros</CardTitle>
-          <CardDescription>Filtre movimentações por tipo, produto ou data</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4 md:flex-row">
-            <Select defaultValue={searchParams.tipo || "all"}>
-              <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="Tipo de movimentação" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as movimentações</SelectItem>
-                <SelectItem value="entrada">Entradas</SelectItem>
-                <SelectItem value="saida">Saídas</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select defaultValue={searchParams.produto || "all"}>
-              <SelectTrigger className="w-full md:w-[250px]">
-                <SelectValue placeholder="Produto" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os produtos</SelectItem>
-                {produtos?.map((produto) => (
-                  <SelectItem key={produto.id} value={produto.id}>
-                    {produto.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Input type="date" className="w-full md:w-[200px]" defaultValue={searchParams.data} />
-          </div>
-        </CardContent>
-      </Card>
+      {/* *** ALTERADO: Usando o novo componente de filtros *** */}
+      <MovimentacoesFilters produtos={produtos || []} />
 
       {/* Lista de Movimentações */}
       <MovimentacoesList movimentacoes={movimentacoes || []} />
