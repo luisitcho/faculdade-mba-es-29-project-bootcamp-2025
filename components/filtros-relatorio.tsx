@@ -29,17 +29,19 @@ export function FiltrosRelatorio({ categorias, searchParams }: FiltrosRelatorioP
   }
 
   const handleGerarRelatorio = () => {
-    const params = new URLSearchParams()
-    
-    if (filtros.tipo !== "estoque") params.set("tipo", filtros.tipo)
-    if (filtros.periodo !== "mes") params.set("periodo", filtros.periodo)
-    if (filtros.categoria !== "all") params.set("categoria", filtros.categoria)
-    
-    const queryString = params.toString()
-    const url = queryString ? `/dashboard/relatorios?${queryString}` : "/dashboard/relatorios"
-    
-    router.push(url)
-  }
+    const params = new URLSearchParams();
+    if (filtros.tipo !== "estoque") params.set("tipo", filtros.tipo);
+    if (filtros.periodo !== "mes") params.set("periodo", filtros.periodo);
+    if (filtros.categoria !== "all") params.set("categoria", filtros.categoria);
+
+    // Chamar endpoint de exportação em Excel
+    const queryString = params.toString();
+    const url = `/api/produtos/exportar${queryString ? `?${queryString}` : ""}`;
+
+    // Abrir em nova aba para download
+    window.open(url, "_blank");
+  };
+
 
   return (
     <Card>
@@ -49,8 +51,8 @@ export function FiltrosRelatorio({ categorias, searchParams }: FiltrosRelatorioP
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Select 
-            value={filtros.tipo} 
+          <Select
+            value={filtros.tipo}
             onValueChange={(valor) => handleFiltroChange("tipo", valor)}
           >
             <SelectTrigger>
@@ -63,9 +65,9 @@ export function FiltrosRelatorio({ categorias, searchParams }: FiltrosRelatorioP
               <SelectItem value="usuarios">Relatório por Usuário</SelectItem>
             </SelectContent>
           </Select>
-          
-          <Select 
-            value={filtros.periodo} 
+
+          <Select
+            value={filtros.periodo}
             onValueChange={(valor) => handleFiltroChange("periodo", valor)}
           >
             <SelectTrigger>
@@ -79,9 +81,9 @@ export function FiltrosRelatorio({ categorias, searchParams }: FiltrosRelatorioP
               <SelectItem value="ano">Este Ano</SelectItem>
             </SelectContent>
           </Select>
-          
-          <Select 
-            value={filtros.categoria} 
+
+          <Select
+            value={filtros.categoria}
             onValueChange={(valor) => handleFiltroChange("categoria", valor)}
           >
             <SelectTrigger>
@@ -96,11 +98,12 @@ export function FiltrosRelatorio({ categorias, searchParams }: FiltrosRelatorioP
               ))}
             </SelectContent>
           </Select>
-          
+
           <Button onClick={handleGerarRelatorio} className="w-full cursor-pointer">
             <FileText className="mr-2 h-4 w-4" />
             Gerar Relatório
           </Button>
+
         </div>
       </CardContent>
     </Card>
