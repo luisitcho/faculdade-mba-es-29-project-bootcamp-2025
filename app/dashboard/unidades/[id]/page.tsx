@@ -6,6 +6,8 @@ import { ArrowLeft, Package } from "lucide-react"
 import Link from "next/link"
 import { ProdutosUnidadeList } from "@/components/produtos-unidade-list"
 
+export const dynamic = 'force-dynamic'
+
 export default async function UnidadeDetalhePage({ params }: { params: { id: string } }) {
   const supabase = await createClient()
 

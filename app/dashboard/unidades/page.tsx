@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { UnidadesList } from "@/components/unidades-list"
 
+export const dynamic = 'force-dynamic'
+
 export default async function UnidadesPage() {
   const supabase = await createClient()
 

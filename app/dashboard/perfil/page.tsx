@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { User, Mail, Shield, Calendar } from "lucide-react"
 
+export const dynamic = 'force-dynamic'
+
 export default async function PerfilPage() {
   const supabase = await createClient()
 

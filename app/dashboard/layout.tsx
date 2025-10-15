@@ -5,6 +5,8 @@ import { Sidebar } from "@/components/sidebar"
 import { ToastNotifications } from "@/components/toast-notifications"
 import { Toaster } from "@/components/ui/toaster"
 
+export const dynamic = 'force-dynamic'
+
 export default async function DashboardLayout({
   children,
 }: {

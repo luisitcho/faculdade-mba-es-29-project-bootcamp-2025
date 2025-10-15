@@ -8,6 +8,8 @@ import { Plus, Search, Package, AlertTriangle, FileDown } from "lucide-react"
 import Link from "next/link"
 import { ProdutosList } from "@/components/produtos-list"
 
+export const dynamic = 'force-dynamic'
+
 interface SearchParams {
   categoria?: string
   busca?: string

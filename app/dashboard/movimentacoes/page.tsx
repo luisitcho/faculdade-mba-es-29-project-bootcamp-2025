@@ -8,6 +8,8 @@ import { Plus, TrendingUp, TrendingDown, Calendar } from "lucide-react"
 import Link from "next/link"
 import { MovimentacoesList } from "@/components/movimentacoes-list"
 
+export const dynamic = 'force-dynamic'
+
 interface SearchParams {
   tipo?: string
   produto?: string

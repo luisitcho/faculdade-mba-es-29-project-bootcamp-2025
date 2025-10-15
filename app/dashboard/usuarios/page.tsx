@@ -6,6 +6,8 @@ import { Search, Users, UserCheck, UserX } from "lucide-react"
 import { GestaoUsuariosList } from "@/components/gestao-usuarios-list"
 import { SetupInicial } from "@/components/setup-inicial"
 
+export const dynamic = 'force-dynamic'
+
 interface SearchParams {
   busca?: string
   status?: string

@@ -2,6 +2,8 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { NotificacoesPageClient } from "@/components/notificacoes-page-client"
 
+export const dynamic = 'force-dynamic'
+
 export default async function NotificacoesPage() {
   const supabase = await createClient()
 

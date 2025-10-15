@@ -8,6 +8,8 @@ import { GraficoEstoque } from "@/components/grafico-estoque"
 import { ExportarRelatoriosButton } from "@/components/exportar-relatorios-button"
 import { FiltrosRelatorio } from "@/components/filtros-relatorio"
 
+export const dynamic = 'force-dynamic'
+
 interface SearchParams {
   tipo?: string
   periodo?: string

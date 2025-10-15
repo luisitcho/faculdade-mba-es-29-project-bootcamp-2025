@@ -2,6 +2,8 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { MovimentacaoForm } from "@/components/movimentacao-form"
 
+export const dynamic = 'force-dynamic'
+
 export default async function NovaSaidaPage() {
   const supabase = await createClient()
 
