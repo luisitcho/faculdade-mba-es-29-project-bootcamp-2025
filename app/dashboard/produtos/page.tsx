@@ -146,7 +146,7 @@ export default async function ProdutosPage({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">{produtosBaixoEstoque}</div>
-            <p className="text-xs text-muted-foreground">Precisam reposição</p>
+            <p className="text-xs text-muted-foreground">Precisam de reposição</p>
           </CardContent>
         </Card>
 
@@ -173,7 +173,7 @@ export default async function ProdutosPage({
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{produtosCategoria}</div>
-                <p className="text-xs text-muted-foreground">produtos</p>
+                <p className="text-xs text-muted-foreground">Produtos</p>
               </CardContent>
             </Card>
           )

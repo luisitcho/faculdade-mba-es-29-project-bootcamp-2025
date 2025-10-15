@@ -108,7 +108,7 @@ export default async function RelatoriosPage({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">{produtosBaixoEstoque}</div>
-            <p className="text-xs text-muted-foreground">Precisam reposição</p>
+            <p className="text-xs text-muted-foreground">Precisam de reposição</p>
           </CardContent>
         </Card>
 

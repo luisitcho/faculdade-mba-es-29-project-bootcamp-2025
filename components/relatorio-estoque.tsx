@@ -98,7 +98,9 @@ export function RelatorioEstoque({ produtos }: RelatorioEstoqueProps) {
                 </div>
               ))}
               {produtosEstoqueZero.length > 5 && (
-                <p className="text-xs text-muted-foreground">E mais {produtosEstoqueZero.length - 5} produtos...</p>
+                <p className="text-xs text-muted-foreground">
+                  E mais {produtosEstoqueZero.length - 5} {produtosEstoqueZero.length - 5 === 1 ? 'produto' : 'produtos'}...
+                </p>
               )}
             </div>
           </div>
@@ -132,7 +134,9 @@ export function RelatorioEstoque({ produtos }: RelatorioEstoqueProps) {
                 </div>
               ))}
               {produtosBaixoEstoque.length > 5 && (
-                <p className="text-xs text-muted-foreground">E mais {produtosBaixoEstoque.length - 5} produtos...</p>
+                <p className="text-xs text-muted-foreground">
+                  E mais {produtosBaixoEstoque.length - 5} {produtosBaixoEstoque.length - 5 === 1 ? 'produto' : 'produtos'}...
+                </p>
               )}
             </div>
           </div>

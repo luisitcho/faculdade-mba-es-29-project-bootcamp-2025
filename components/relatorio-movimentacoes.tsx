@@ -131,7 +131,9 @@ export function RelatorioMovimentacoes({ movimentacoes }: RelatorioMovimentacoes
               <span className="text-sm font-medium text-green-600">Entradas</span>
             </div>
             <p className="text-lg font-bold text-green-600">{totalEntradas}</p>
-            <p className="text-xs text-muted-foreground">{entradas.length} movimentações</p>
+            <p className="text-xs text-muted-foreground">
+              {entradas.length} movimentaç{entradas.length <= 1 ? 'ão' : 'ões'}
+            </p>
             {valorEntradas > 0 && <p className="text-xs text-green-600">R$ {valorEntradas.toFixed(2)}</p>}
           </div>
 
@@ -141,7 +143,10 @@ export function RelatorioMovimentacoes({ movimentacoes }: RelatorioMovimentacoes
               <span className="text-sm font-medium text-red-600">Saídas</span>
             </div>
             <p className="text-lg font-bold text-red-600">{totalSaidas}</p>
-            <p className="text-xs text-muted-foreground">{saidas.length} movimentações</p>
+
+            <p className="text-xs text-muted-foreground">
+              {saidas.length} movimentaç{saidas.length <= 1 ? 'ão' : 'ões'}
+            </p>
             {valorSaidas > 0 && <p className="text-xs text-red-600">R$ {valorSaidas.toFixed(2)}</p>}
           </div>
         </div>
