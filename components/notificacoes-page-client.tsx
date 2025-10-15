@@ -15,9 +15,9 @@ interface Notificacao {
   titulo: string
   mensagem: string
   lida: boolean
-  data_leitura: string | null
   metadata: any
   created_at: string
+  updated_at: string
 }
 
 export function NotificacoesPageClient() {
@@ -55,7 +55,6 @@ export function NotificacoesPageClient() {
       const user = userRes.data.user
       if (!user) return
 
-      // Atualiza apenas lida: true
       const { error } = await supabase
         .from("notificacoes")
         .update({ lida: true })
@@ -72,29 +71,42 @@ export function NotificacoesPageClient() {
     }
   }
 
-  // NOVO: marcar 1 notificação como lida
+  // ✅ Corrigido: remove data_leitura (não existe na tabela)
   const marcarComoLida = async (notificacaoId: string) => {
-    if (!notificacaoId) return
+    if (!notificacaoId) {
+      console.error("ID da notificação não fornecido")
+      return
+    }
+
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      if (!user) {
+        console.error("Usuário não autenticado")
+        return
+      }
 
       const { error } = await supabase
         .from("notificacoes")
         .update({ lida: true })
         .eq("usuario_id", user.id)
-        .eq("id", notificacaoId.toString()) // garante que é string
+        .eq("id", notificacaoId.toString())
 
-      if (error) throw error
+      if (error) {
+        console.error("Erro do Supabase:", error)
+        throw error
+      }
 
       setNotificacoes(prev =>
-        prev.map(n => (n.id === notificacaoId ? { ...n, lida: true } : n))
+        prev.map(n => 
+          n.id === notificacaoId 
+            ? { ...n, lida: true, updated_at: new Date().toISOString() } 
+            : n
+        )
       )
     } catch (err) {
       console.error("Erro ao marcar notificação como lida:", err)
     }
   }
-
 
   useEffect(() => {
     buscarNotificacoes()
@@ -102,7 +114,6 @@ export function NotificacoesPageClient() {
     return () => clearInterval(interval)
   }, [])
 
-  // Estatísticas
   const totalNotificacoes = notificacoes.length
   const naoLidas = notificacoes.filter(n => !n.lida).length
   const estoqueBaixo = notificacoes.filter(n => n.titulo === "Estoque Baixo" && !n.lida).length

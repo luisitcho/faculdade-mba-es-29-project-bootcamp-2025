@@ -1,12 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Bell, AlertTriangle, Package, TrendingUp, Settings, Check, Eye } from "lucide-react"
-import { useRouter } from "next/navigation"
 
 interface Notificacao {
   id: string
@@ -21,34 +19,11 @@ interface Notificacao {
 
 interface NotificacoesListProps {
   notificacoes: Notificacao[]
+  marcarComoLida: (notificacaoId: string) => Promise<void>
 }
 
-export function NotificacoesList({ notificacoes }: NotificacoesListProps) {
+export function NotificacoesList({ notificacoes, marcarComoLida }: NotificacoesListProps) {
   const [isLoading, setIsLoading] = useState<string | null>(null)
-  const router = useRouter()
-
-  const marcarComoLida = async (notificacaoId: string) => {
-    setIsLoading(notificacaoId)
-    const supabase = createClient()
-
-    try {
-      const { error } = await supabase
-        .from("notificacoes")
-        .update({
-          lida: true,
-          data_leitura: new Date().toISOString(),
-        })
-        .eq("id", notificacaoId)
-
-      if (error) throw error
-
-      router.refresh()
-    } catch (error) {
-      console.error("Erro ao marcar notificação como lida:", error)
-    } finally {
-      setIsLoading(null)
-    }
-  }
 
   const getTipoIcon = (tipo: string) => {
     switch (tipo) {
@@ -173,7 +148,14 @@ export function NotificacoesList({ notificacoes }: NotificacoesListProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => marcarComoLida(notificacao.id)}
+                    onClick={async () => {
+                      setIsLoading(notificacao.id)
+                      try {
+                        await marcarComoLida(notificacao.id)
+                      } finally {
+                        setIsLoading(null)
+                      }
+                    }}
                     disabled={isLoading === notificacao.id}
                   >
                     {isLoading === notificacao.id ? (
