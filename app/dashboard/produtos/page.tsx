@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Search, Package, AlertTriangle, FileDown } from "lucide-react"
 import Link from "next/link"
 import { ProdutosList } from "@/components/produtos-list"
@@ -35,8 +36,7 @@ export default async function ProdutosPage({
   let query = supabase.from("produtos").select("*").eq("ativo", true)
 
   // Aplicar filtros
-  // Só aplica categoria se existir e for diferente de "all"
-  if (searchParams.categoria && searchParams.categoria !== "all") {
+  if (searchParams.categoria) {
     query = query.eq("categoria_id", searchParams.categoria)
   }
 
@@ -55,8 +55,7 @@ export default async function ProdutosPage({
   })
 
   // Estatísticas
-  // const totalProdutos = produtos?.length || 0
-  const { count: totalProdutos } = await supabase.from("produtos").select("*", { count: "exact", head: true })
+  const totalProdutos = produtos?.length || 0
   const produtosBaixoEstoque = produtos?.filter((p) => p.estoque_atual <= p.estoque_minimo).length || 0
   const valorTotalEstoque = produtos?.reduce((total, p) => total + p.estoque_atual * (p.valor_unitario || 0), 0) || 0
 
@@ -108,15 +107,11 @@ export default async function ProdutosPage({
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
-            <Link
-              href={`/api/produtos/exportar?categoria=${searchParams.categoria || "all"}&busca=${searchParams.busca || ""}`}
-              target="_blank"
-            >
+            <Link href="/dashboard/produtos/exportar">
               <FileDown className="mr-2 h-4 w-4" />
               Exportar
             </Link>
           </Button>
-
           {podeEditar && (
             <Button asChild>
               <Link href="/dashboard/produtos/novo">
@@ -189,57 +184,34 @@ export default async function ProdutosPage({
           <CardDescription>Filtre produtos por categoria ou busque por nome</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* FORM: method GET -> atualiza searchParams na URL, a página server recebe e aplica filtros */}
-          <form method="get" className="flex flex-col gap-4 md:flex-row items-start md:items-center">
-            <div className="flex-1 w-full">
+          <div className="flex flex-col gap-4 md:flex-row">
+            <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar produtos..."
                   className="pl-10"
-                  defaultValue={searchParams.busca || ""}
+                  defaultValue={searchParams.busca}
                   name="busca"
                 />
               </div>
             </div>
-
-            {/* Categoria - uso de select nativo para garantir envio via GET */}
-            <div className="w-full md:w-[220px]">
-              <label className="sr-only" htmlFor="categoria">Categoria</label>
-              <select
-                id="categoria"
-                name="categoria"
-                defaultValue={searchParams.categoria || "all"}
-                className="w-full rounded-md border px-3 py-2 text-sm"
-              >
-                <option value="all">Todas as categorias</option>
+            <Select defaultValue={searchParams.categoria || "all"}>
+              <SelectTrigger className="w-full md:w-[200px]">
+                <SelectValue placeholder="Todas as categorias" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as categorias</SelectItem>
                 {categorias?.map((categoria) => (
-                  <option key={categoria.id} value={categoria.id}>
+                  <SelectItem key={categoria.id} value={categoria.id}>
                     {categoria.nome}
-                  </option>
+                  </SelectItem>
                 ))}
-              </select>
-            </div>
-
-            {/* Botões */}
-            {/* Botões */}
-            <div className="flex gap-2 w-full md:w-auto">
-              <Button type="submit" className="flex items-center">
-                <Search className="mr-2 h-4 w-4" />
-                Buscar
-              </Button>
-
-              <Button asChild variant="outline" className="flex items-center">
-                <Link href="/dashboard/produtos">
-                  Limpar
-                </Link>
-              </Button>
-            </div>
-
-          </form>
+              </SelectContent>
+            </Select>
+          </div>
         </CardContent>
       </Card>
-
 
       {/* Lista de Produtos */}
       <ProdutosList produtos={produtos || []} podeEditar={podeEditar} />

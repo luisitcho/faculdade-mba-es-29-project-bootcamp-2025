@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Bell, BellOff, Check, AlertTriangle, Package } from "lucide-react"
 import { NotificacoesList } from "@/components/notificacoes-list"
 import { useRouter } from "next/navigation"
@@ -14,17 +15,17 @@ interface Notificacao {
   titulo: string
   mensagem: string
   lida: boolean
+  data_leitura: string | null
   metadata: any
   created_at: string
-  updated_at: string
 }
 
 export function NotificacoesPageClient() {
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isMarkingAll, setIsMarkingAll] = useState(false)
-  const [produtosZeradosCount, setProdutosZeradosCount] = useState<number>(0) // NOVO: contador real da tabela produtos
   const router = useRouter()
+
   const supabase = createClient()
 
   const buscarNotificacoes = async () => {
@@ -47,49 +48,6 @@ export function NotificacoesPageClient() {
     }
   }
 
-  const buscarProdutosZerados = async () => {
-    // Busca diretamente na tabela produtos quantos estão com estoque 0 e ativos
-    try {
-      const { count, error } = await supabase
-        .from("produtos")
-        .select("id", { count: "exact", head: false })
-        .eq("estoque_atual", 0)
-        .eq("ativo", true)
-
-      if (error) {
-        console.error("Erro ao buscar produtos zerados:", error)
-        return
-      }
-
-      // se count não vier (algumas versões do client), calculamos pelo data length
-      // porém select com count: "exact" normalmente retorna count no objeto meta; para simplicidade:
-      // se count undefined, usamos data.length
-      // aqui supabase-js retorna { data, count, error }
-      // adaptamos para suportar ambos
-      // Se sua versão do client NÃO retorna count, a query abaixo pode ser trocada por:
-      // const { data } = await supabase.from('produtos').select('id', { head: false }).eq('estoque_atual', 0).eq('ativo', true)
-      // setProdutosZeradosCount(data?.length || 0)
-      // Mas a forma abaixo cobre a maioria dos casos:
-      // @ts-ignore
-      const maybeCount = (count as number) ?? 0
-      if (maybeCount > 0) {
-        setProdutosZeradosCount(maybeCount)
-        return
-      }
-
-      // fallback: buscar data e contar
-      const { data } = await supabase
-        .from("produtos")
-        .select("id")
-        .eq("estoque_atual", 0)
-        .eq("ativo", true)
-
-      setProdutosZeradosCount(data?.length || 0)
-    } catch (err) {
-      console.error("Erro ao buscar produtos zerados:", err)
-    }
-  }
-
   const marcarTodasComoLidas = async () => {
     setIsMarkingAll(true)
     try {
@@ -97,6 +55,7 @@ export function NotificacoesPageClient() {
       const user = userRes.data.user
       if (!user) return
 
+      // Atualiza apenas lida: true
       const { error } = await supabase
         .from("notificacoes")
         .update({ lida: true })
@@ -113,12 +72,13 @@ export function NotificacoesPageClient() {
     }
   }
 
+  // NOVO: marcar 1 notificação como lida
   const marcarComoLida = async (notificacaoId: string) => {
     if (!notificacaoId) {
       console.error("ID da notificação não fornecido")
       return
     }
-
+    
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
@@ -128,7 +88,10 @@ export function NotificacoesPageClient() {
 
       const { error } = await supabase
         .from("notificacoes")
-        .update({ lida: true })
+        .update({ 
+          lida: true,
+          data_leitura: new Date().toISOString()
+        })
         .eq("usuario_id", user.id)
         .eq("id", notificacaoId.toString())
 
@@ -137,10 +100,11 @@ export function NotificacoesPageClient() {
         throw error
       }
 
+      // Atualiza o estado local
       setNotificacoes(prev =>
-        prev.map(n =>
-          n.id === notificacaoId
-            ? { ...n, lida: true, updated_at: new Date().toISOString() }
+        prev.map(n => 
+          n.id === notificacaoId 
+            ? { ...n, lida: true, data_leitura: new Date().toISOString() } 
             : n
         )
       )
@@ -149,63 +113,18 @@ export function NotificacoesPageClient() {
     }
   }
 
+
   useEffect(() => {
-    // busca inicial de notificações e produtos zerados
     buscarNotificacoes()
-    buscarProdutosZerados()
-
-    const interval = setInterval(() => {
-      buscarNotificacoes()
-      buscarProdutosZerados()
-    }, 10000)
-
+    const interval = setInterval(buscarNotificacoes, 10000)
     return () => clearInterval(interval)
   }, [])
 
-  // Listener em tempo real para notificações (mantém como estava)
-  useEffect(() => {
-    const channel = supabase
-      .channel("notificacoes-changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "notificacoes" },
-        () => {
-          buscarNotificacoes()
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [])
-
-  // NOVO: Listener em tempo real para atualizações relevantes na tabela produtos
-  useEffect(() => {
-    // Observa inserts/updates/deletes na tabela produtos
-    const produtosChannel = supabase
-      .channel("produtos-changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "produtos" },
-        (payload) => {
-          // Se quiser otimizar, podemos checar payload.record.estoque_atual
-          // mas aqui vamos refazer a contagem sempre que algo mudar na tabela produtos
-          buscarProdutosZerados()
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(produtosChannel)
-    }
-  }, [])
-
+  // Estatísticas
   const totalNotificacoes = notificacoes.length
   const naoLidas = notificacoes.filter(n => !n.lida).length
   const estoqueBaixo = notificacoes.filter(n => n.titulo === "Estoque Baixo" && !n.lida).length
-  // agora usamos o contador real dos produtos
-  const estoqueZero = produtosZeradosCount
+  const estoqueZero = notificacoes.filter(n => n.titulo === "Sem Estoque" && !n.lida).length
 
   if (isLoading) {
     return (
