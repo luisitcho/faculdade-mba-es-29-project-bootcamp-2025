@@ -72,6 +72,14 @@ export function ProdutoForm({ categorias, produto }: ProdutoFormProps) {
     fetchUnidades()
   }, [produto])
 
+  // Atualizar estoque total automaticamente quando houver mudanças nas unidades
+  useEffect(() => {
+    const total = Object.values(estoquePorUnidade).reduce((acc, curr) => {
+      return acc + (Number.parseInt(curr) || 0)
+    }, 0)
+    setEstoqueAtual(total.toString())
+  }, [estoquePorUnidade])
+
   const handleToggleUnidade = (unidadeId: string) => {
     setUnidadesSelecionadas((prev) => {
       if (prev.includes(unidadeId)) {
@@ -148,7 +156,10 @@ export function ProdutoForm({ categorias, produto }: ProdutoFormProps) {
 
       if (relError) throw relError
 
-      router.push("/dashboard/produtos")
+      if (relError) throw relError
+
+      // Voltar para a página anterior (dashboard ou lista de produtos)
+      router.back()
       router.refresh()
     } catch (error: unknown) {
       console.error("[v0] Erro ao salvar produto:", error)
@@ -288,8 +299,8 @@ export function ProdutoForm({ categorias, produto }: ProdutoFormProps) {
                   type="number"
                   min="0"
                   value={estoqueAtual}
-                  onChange={(e) => setEstoqueAtual(e.target.value)}
-                  required
+                  readOnly
+                  className="bg-muted cursor-not-allowed"
                 />
               </div>
             </div>
