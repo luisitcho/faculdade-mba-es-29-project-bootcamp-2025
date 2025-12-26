@@ -63,7 +63,13 @@ export default function CadastroPage() {
     }
 
     try {
-      const finalEmail = email.trim() || `${nome.replace(/\s+/g, "").toLowerCase()}@temp.local`
+      let finalEmail = email.trim()
+
+      if (!finalEmail) {
+        finalEmail = `${nome.replace(/\s+/g, "").toLowerCase()}@temp.local`
+      } else if (!finalEmail.includes("@")) {
+        finalEmail = `${finalEmail}@temp.local`
+      }
 
       const { data, error } = await supabase.auth.signUp({
         email: finalEmail,
@@ -79,6 +85,22 @@ export default function CadastroPage() {
       if (error) throw error
 
       if (data.user) {
+        // Garantir que o perfil seja criado na tabela pública
+        const { error: profileError } = await supabase.from("profiles").insert({
+          id: data.user.id,
+          nome,
+          email: finalEmail,
+          perfil_acesso: finalPerfilAcesso,
+          ativo: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+
+        // Ignora erro de duplicidade (código 23505) caso um trigger já tenha criado
+        if (profileError && profileError.code !== "23505") {
+          console.error("Erro ao criar perfil:", profileError)
+        }
+
         router.push("/auth/sucesso")
       }
     } catch (error: unknown) {

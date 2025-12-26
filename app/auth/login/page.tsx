@@ -25,8 +25,13 @@ export default function LoginPage() {
     setError(null)
 
     try {
+      let finalEmail = email.trim()
+      if (!finalEmail.includes("@")) {
+        finalEmail = `${finalEmail}@temp.local`
+      }
+
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: finalEmail,
         password,
       })
 
