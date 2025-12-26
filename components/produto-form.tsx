@@ -325,8 +325,8 @@ export function ProdutoForm({ categorias, produto }: ProdutoFormProps) {
                 <Save className="mr-2 h-4 w-4" />
                 {isLoading ? "Salvando..." : produto ? "Atualizar Produto" : "Cadastrar Produto"}
               </Button>
-              <Button type="button" variant="outline" asChild className="cursor-pointer bg-transparent">
-                <Link href="/dashboard/produtos">Cancelar</Link>
+              <Button type="button" variant="outline" onClick={() => router.back()} className="cursor-pointer bg-transparent">
+                Cancelar
               </Button>
             </div>
           </form>
