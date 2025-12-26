@@ -25,13 +25,8 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      let finalEmail = email.trim()
-      if (!finalEmail.includes("@")) {
-        finalEmail = `${finalEmail}@temp.local`
-      }
-
       const { error } = await supabase.auth.signInWithPassword({
-        email: finalEmail,
+        email,
         password,
       })
 
@@ -58,18 +53,18 @@ export default function LoginPage() {
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email/Usuário</Label>
+                <Label htmlFor="email">Email *</Label>
                 <Input
                   id="email"
-                  type="text"
-                  placeholder="admin ou seu@email.com"
+                  type="email"
+                  placeholder="seu@email.com"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
+                <Label htmlFor="password">Senha *</Label>
                 <Input
                   id="password"
                   type="password"

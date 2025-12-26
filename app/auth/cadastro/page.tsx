@@ -63,13 +63,8 @@ export default function CadastroPage() {
     }
 
     try {
-      let finalEmail = email.trim()
-
-      if (!finalEmail) {
-        finalEmail = `${nome.replace(/\s+/g, "").toLowerCase()}@temp.local`
-      } else if (!finalEmail.includes("@")) {
-        finalEmail = `${finalEmail}@temp.local`
-      }
+      // Remover lógica de e-mail temporário
+      const finalEmail = email.trim()
 
       const { data, error } = await supabase.auth.signUp({
         email: finalEmail,
@@ -133,7 +128,7 @@ export default function CadastroPage() {
           <CardContent>
             <form onSubmit={handleSignUp} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="nome">Nome Completo</Label>
+                <Label htmlFor="nome">Nome Completo *</Label>
                 <Input
                   id="nome"
                   type="text"
@@ -144,18 +139,19 @@ export default function CadastroPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email/Usuário (opcional)</Label>
+                <Label htmlFor="email">Email *</Label>
                 <Input
                   id="email"
-                  type="text"
-                  placeholder="admin ou seu@email.com (deixe vazio para usar apenas nome)"
+                  type="email"
+                  placeholder="seu@email.com"
+                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
               {isAdmin && (
                 <div className="space-y-2">
-                  <Label htmlFor="perfil">Perfil de Acesso</Label>
+                  <Label htmlFor="perfil">Perfil de Acesso *</Label>
                   <Select value={perfilAcesso} onValueChange={setPerfilAcesso}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o perfil" />
@@ -169,7 +165,7 @@ export default function CadastroPage() {
                 </div>
               )}
               <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
+                <Label htmlFor="password">Senha *</Label>
                 <Input
                   id="password"
                   type="password"
@@ -179,7 +175,7 @@ export default function CadastroPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+                <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
