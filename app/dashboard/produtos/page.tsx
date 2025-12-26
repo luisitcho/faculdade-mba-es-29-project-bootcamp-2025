@@ -36,7 +36,7 @@ export default async function ProdutosPage({
   let query = supabase.from("produtos").select("*").eq("ativo", true)
 
   // Aplicar filtros
-  if (searchParams.categoria) {
+  if (searchParams.categoria && searchParams.categoria !== "all") {
     query = query.eq("categoria_id", searchParams.categoria)
   }
 
@@ -187,8 +187,8 @@ export default async function ProdutosPage({
           <CardDescription>Filtre produtos por categoria ou busque por nome</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col gap-4 md:flex-row">
-            <div className="flex-1">
+          <form className="flex flex-col gap-4 md:flex-row items-end">
+            <div className="flex-1 w-full">
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -199,20 +199,28 @@ export default async function ProdutosPage({
                 />
               </div>
             </div>
-            <Select defaultValue={searchParams.categoria || "all"}>
-              <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="Todas as categorias" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as categorias</SelectItem>
-                {categorias?.map((categoria) => (
-                  <SelectItem key={categoria.id} value={categoria.id}>
-                    {categoria.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            <div className="w-full md:w-[200px]">
+              <Select defaultValue={searchParams.categoria || "all"} name="categoria">
+                <SelectTrigger>
+                  <SelectValue placeholder="Todas as categorias" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as categorias</SelectItem>
+                  {categorias?.map((categoria) => (
+                    <SelectItem key={categoria.id} value={categoria.id}>
+                      {categoria.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2">
+              <Button type="submit">Filtrar</Button>
+              <Button variant="outline" asChild>
+                <Link href="/dashboard/produtos">Limpar</Link>
+              </Button>
+            </div>
+          </form>
         </CardContent>
       </Card>
 
