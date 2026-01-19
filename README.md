@@ -4,25 +4,37 @@ Sistema completo de gerenciamento de estoque com controle de produtos, movimenta
 
 ## Tecnologias Utilizadas
 
-### Frontend
-- **[Next.js 15](https://nextjs.org/)** - Framework React com App Router
-- **[React 19](https://react.dev/)** - Biblioteca para construção de interfaces
-- **[TypeScript](https://www.typescriptlang.org/)** - Superset JavaScript com tipagem estática
-- **[Tailwind CSS v4](https://tailwindcss.com/)** - Framework CSS utility-first
-- **[shadcn/ui](https://ui.shadcn.com/)** - Componentes de UI reutilizáveis
-- **[Lucide React](https://lucide.dev/)** - Biblioteca de ícones
+### Core & Frameworks
+- **[Next.js 14](https://nextjs.org/)** - Framework React com App Router e Server Actions.
+- **[React 18](https://react.dev/)** - Biblioteca principal para construção da interface.
+- **[TypeScript](https://www.typescriptlang.org/)** - Linguagem para tipagem estática e maior segurança no desenvolvimento.
+
+### Estilização & UI
+- **[Tailwind CSS v4](https://tailwindcss.com/)** - Framework CSS utilitário para design responsivo e customizado.
+- **[shadcn/ui](https://ui.shadcn.com/)** - Componentes de interface acessíveis e altamente customizáveis (baseados em Radix UI).
+- **[Lucide React](https://lucide.dev/)** - Biblioteca de ícones vetoriais modernos.
+- **[Geist Font](https://vercel.com/font)** - Tipografia oficial da Vercel para uma interface limpa.
+- **[Next Themes](https://github.com/pacocoursey/next-themes)** - Suporte nativo para temas claro e escuro (light/dark mode).
 
 ### Backend & Banco de Dados
-- **[Supabase](https://supabase.com/)** - Backend as a Service (BaaS)
-- **[PostgreSQL](https://www.postgresql.org/)** - Banco de dados relacional
-- **[Supabase Auth](https://supabase.com/auth)** - Sistema de autenticação
-- **[Row Level Security (RLS)](https://supabase.com/docs/guides/auth/row-level-security)** - Segurança em nível de linha
+- **[Supabase](https://supabase.com/)** - Plataforma Backend as a Service (BaaS) que provê:
+  - **PostgreSQL**: Banco de dados relacional robusto.
+  - **Auth**: Gerenciamento completo de autenticação e perfis de usuário.
+  - **Row Level Security (RLS)**: Segurança de dados diretamente na camada do banco.
 
-### Visualização de Dados
-- **[Recharts](https://recharts.org/)** - Biblioteca de gráficos para React
+### Gerenciamento de Dados & Formulários
+- **[React Hook Form](https://react-hook-form.com/)** - Biblioteca para gerenciamento performático de formulários.
+- **[Zod](https://zod.dev/)** - Validação de esquemas baseada em TypeScript para garantir a integridade dos dados.
+- **[date-fns](https://date-fns.org/)** - Utilitários para manipulação e formatação de datas.
 
-### Hospedagem & Deploy
-- **[Vercel](https://vercel.com/)** - Plataforma de hospedagem e deploy
+### Gráficos & Exportação
+- **[Recharts](https://recharts.org/)** - Biblioteca de gráficos compositáveis para visualização no Dashboard.
+- **[ExcelJS](https://github.com/exceljs/exceljs)** - Geração de planilhas Excel estruturadas para relatórios administrativos.
+- **[json2csv](https://github.com/juanquiceno/json2csv)** - Conversão de dados para formato CSV, oferecendo flexibilidade na exportação.
+
+### Infraestrutura & Análise
+- **[Vercel](https://vercel.com/)** - Plataforma de hospedagem, deploy contínuo (CI/CD) e análise de performance.
+- **[@vercel/analytics](https://vercel.com/analytics)** - Monitoramento de métricas de uso e performance em tempo real.
 
 ## Funcionalidades
 
