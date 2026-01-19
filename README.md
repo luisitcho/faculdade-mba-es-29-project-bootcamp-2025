@@ -1,200 +1,137 @@
-# Sistema de Gestão de Estoque
+# Enterprise Inventory Management System (EIMS)
+ 
+Solução avançada para Gestão de Inventário e Controle Logístico, projetada com foco em rastreabilidade transacional, segurança granular e integridade de dados multi-unidade.
 
-Sistema completo de gerenciamento de estoque com controle de produtos, movimentações, usuários e unidades.
+## Stack Técnica
 
-## Tecnologias Utilizadas
+### Frontend & Core
+- **Next.js 14**: Arquitetura App Router e Server Actions.
+- **React 18**: Componentização funcional e Hooks.
+- **TypeScript**: Tipagem estática e segurança de tipos.
 
-### Core & Frameworks
-- **[Next.js 14](https://nextjs.org/)** - Framework React com App Router e Server Actions.
-- **[React 18](https://react.dev/)** - Biblioteca principal para construção da interface.
-- **[TypeScript](https://www.typescriptlang.org/)** - Linguagem para tipagem estática e maior segurança no desenvolvimento.
+### UI/UX & Design System
+- **Tailwind CSS v4**: Estilização utilitária e responsividade.
+- **shadcn/ui**: Componentes de UI baseados em Radix UI.
+- **Next Themes**: Gerenciamento de temas (Light/Dark).
+- **Lucide React**: Biblioteca de ícones vetoriais.
 
-### Estilização & UI
-- **[Tailwind CSS v4](https://tailwindcss.com/)** - Framework CSS utilitário para design responsivo e customizado.
-- **[shadcn/ui](https://ui.shadcn.com/)** - Componentes de interface acessíveis e altamente customizáveis (baseados em Radix UI).
-- **[Lucide React](https://lucide.dev/)** - Biblioteca de ícones vetoriais modernos.
-- **[Geist Font](https://vercel.com/font)** - Tipografia oficial da Vercel para uma interface limpa.
-- **[Next Themes](https://github.com/pacocoursey/next-themes)** - Suporte nativo para temas claro e escuro (light/dark mode).
+### Backend & BaaS
+- **Supabase**: 
+  - **PostgreSQL**: Persistência de dados relacionais.
+  - **Auth**: Autenticação via JWT e gestão de sessões.
+  - **RLS**: Políticas de acesso em nível de banco de dados.
 
-### Backend & Banco de Dados
-- **[Supabase](https://supabase.com/)** - Plataforma Backend as a Service (BaaS) que provê:
-  - **PostgreSQL**: Banco de dados relacional robusto.
-  - **Auth**: Gerenciamento completo de autenticação e perfis de usuário.
-  - **Row Level Security (RLS)**: Segurança de dados diretamente na camada do banco.
+### Data & Logic
+- **React Hook Form**: Gestão de estados de formulário.
+- **Zod**: Validação de esquemas e contratos de dados.
+- **ExcelJS / json2csv**: Serialização para exportação (XLSX/CSV).
+- **Recharts**: Visualização de dados e gráficos.
 
-### Gerenciamento de Dados & Formulários
-- **[React Hook Form](https://react-hook-form.com/)** - Biblioteca para gerenciamento performático de formulários.
-- **[Zod](https://zod.dev/)** - Validação de esquemas baseada em TypeScript para garantir a integridade dos dados.
-- **[date-fns](https://date-fns.org/)** - Utilitários para manipulação e formatação de datas.
+### Infraestrutura
+- **Vercel**: Deployment, CI/CD e Analytics.
 
-### Gráficos & Exportação
-- **[Recharts](https://recharts.org/)** - Biblioteca de gráficos compositáveis para visualização no Dashboard.
-- **[ExcelJS](https://github.com/exceljs/exceljs)** - Geração de planilhas Excel estruturadas para relatórios administrativos.
-- **[json2csv](https://github.com/juanquiceno/json2csv)** - Conversão de dados para formato CSV, oferecendo flexibilidade na exportação.
+## Funcionalidades e Módulos
 
-### Infraestrutura & Análise
-- **[Vercel](https://vercel.com/)** - Plataforma de hospedagem, deploy contínuo (CI/CD) e análise de performance.
-- **[@vercel/analytics](https://vercel.com/analytics)** - Monitoramento de métricas de uso e performance em tempo real.
+### Autenticação & RBAC
+- Gestão de identidade via **Supabase Auth**.
+- Perfis de acesso: `Admin`, `Operador`, `Consulta`.
+- Proteção de rotas e APIs via Middleware.
 
-## Funcionalidades
+### Gestão de Unidades & Inventário
+- Cadastro e CRUD de unidades físicas.
+- Controle de estoque segmentado por localização.
 
-### Gestão de Usuários
-- Sistema de autenticação com Supabase
-- Perfis de acesso (Admin, Operador, Consulta)
-- Controle de permissões por perfil
-- Gerenciamento de usuários (apenas para admins)
+### Catálogo & Controle de Estoque
+- Categorização de produtos e controle de estoque mínimo.
+- Gatilhos para alertas de reposição.
+- Movimentação rápida de inventário.
 
-### Gestão de Unidades
-- Cadastro de unidades/locais
-- Visualização de produtos por unidade
-- Controle de estoque por localização
-
-### Gestão de Produtos
-- Cadastro de produtos por categoria
-- Categorias: Alimentação, Higiene/Limpeza, Pedagógico, Bens
-- Controle de estoque mínimo
-- Alertas de estoque baixo
-- Edição rápida de quantidades
-- Vinculação de produtos a unidades
-
-### Controle de Movimentações
-- Registro de entradas de produtos
-- Registro de saídas de produtos
-- Histórico completo de movimentações
-- Atualização automática de estoque
-- Filtros por tipo, produto e data
-
-### Dashboard & Relatórios
-- Dashboard com estatísticas em tempo real
-- Gráficos de estoque por categoria
-- Relatórios de produtos
-- Relatórios de movimentações
-- Exportação de relatórios em Excel/CSV
-- Produtos com estoque baixo
+### Auditoria & Relatórios
+- Log imutável de entradas e saídas (Audit Trail).
+- Exportação de dados em **XLSX/CSV**.
+- Dashboard com indicadores (KPIs) e gráficos Recharts.
 
 ### Notificações
-- Sistema de alertas automáticos
-- Notificações de estoque baixo
-- Notificações de movimentações importantes
-- Central de notificações
-- Notificações em tempo real
-
-## Instalação
-
-### Pré-requisitos
-- Node.js 18+ instalado
-- Conta no Supabase
-- Conta no Vercel (para deploy)
-
-### Configuração Local
-
-1. Clone o repositório:
-\`\`\`bash
-git clone <url-do-repositorio>
-cd inventory-system
-\`\`\`
-
-2. Instale as dependências:
-\`\`\`bash
-npm install
-\`\`\`
-
-3. Configure as variáveis de ambiente:
-\`\`\`env
-NEXT_PUBLIC_SUPABASE_URL=sua-url-do-supabase
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anonima
-SUPABASE_SERVICE_ROLE_KEY=sua-chave-de-servico
-\`\`\`
-
-4. Execute os scripts SQL na ordem:
-- `001_create_tables.sql` - Cria as tabelas principais
-- `002_create_profile_trigger.sql` - Cria triggers de perfil
-- `003_create_notifications.sql` - Cria sistema de notificações
-- `014_create_unidades.sql` - Cria tabela de unidades
-- `013_create_luis_admin.sql` - Cria usuário admin
-
-5. Inicie o servidor de desenvolvimento:
-\`\`\`bash
-npm run dev
-\`\`\`
-
-6. Acesse http://localhost:3000
-
-## Acesso Padrão
-
-**Usuário Admin:**
-- Email: admin@admin.com
-- Senha: admin123
-
-## Estrutura do Projeto
-
-```
-├── app/
-│   ├── auth/              # Páginas de autenticação
-│   ├── dashboard/         # Páginas do painel
-│   │   ├── produtos/      # Gestão de produtos
-│   │   ├── movimentacoes/ # Controle de movimentações
-│   │   ├── relatorios/    # Relatórios e gráficos
-│   │   ├── usuarios/      # Gestão de usuários
-│   │   ├── unidades/      # Gestão de unidades
-│   │   └── notificacoes/  # Central de notificações
-│   └── globals.css        # Estilos globais
-├── components/            # Componentes reutilizáveis
-├── lib/                   # Utilitários e configurações
-│   ├── supabase/         # Clientes Supabase
-│   └── excel-export.ts   # Exportação de relatórios
-├── scripts/              # Scripts SQL do banco de dados
-└── middleware.ts         # Middleware de autenticação
-```
+- Alertas automáticos de estoque crítico.
+- Central de notificações em tempo real.
 
 ## Segurança
 
-- Autenticação via Supabase Auth
-- Row Level Security (RLS) em todas as tabelas
-- Middleware de proteção de rotas
-- Controle de permissões por perfil
-- Validação de dados no servidor
+- **Auth**: JWT via Supabase.
+- **Data**: Row Level Security (RLS) no PostgreSQL.
+- **Routes**: Proteção via Next.js Middleware.
+- **Validation**: Validação de schemas com Zod.
+- **RBAC**: Controle de permissões granular por nível de usuário.
 
-## Banco de Dados
+## Estrutura do Projeto
 
-### Tabelas Principais
-- `profiles` - Perfis de usuários
-- `unidades` - Unidades/locais
-- `categorias` - Categorias de produtos
-- `produtos` - Produtos cadastrados
-- `movimentacoes` - Histórico de movimentações
-- `notificacoes` - Sistema de notificações
+A organização dos diretórios segue as convenções do Next.js com foco em separação de preocupações:
 
-## Como Executar o Projeto
-1. Clone este repositório:
-   ```bash
-   git clone https://github.com/luisitcho/faculdade-mba-es-29-project-bootcamp-2025
-   ```
+```
+├── app/                  # Rotas, layouts e Server Components (App Router)
+│   ├── api/              # Endpoints transacionais e exportação de dados
+│   ├── auth/             # Fluxos de autenticação (Login/Cadastro)
+│   └── dashboard/        # Módulos principais do sistema (Produtos, Relatórios, etc)
+├── components/           # UI Components (Átomos, Moléculas e Organismos)
+│   └── ui/               # Componentes base do Design System (Radix/shadcn)
+├── lib/                  # Configurações de clientes (Supabase, Excel) e utilitários
+├── scripts/              # Migrations e esquemas SQL do banco de dados
+├── hooks/                # Custom React Hooks para lógica de estado complexa
+└── middleware.ts         # Orquestração de segurança e redirecionamento de rotas
+```
 
-2. Instale as dependências:
-   ```bash
-   npm install
-   ```
+## Setup do Ambiente de Desenvolvimento
+ 
+ ### Pré-requisitos
+- **Runtime**: Node.js 18.x ou superior.
+- **Database Manager**: Acesso administrativo a uma instância **Supabase**.
+- **Package Manager**: npm, yarn ou pnpm.
+ 
+### Guia de Instalação
+ 
+1. **Cópia do Repositório**:
+ ```bash
+ git clone https://github.com/luisitcho/faculdade-mba-es-29-project-bootcamp-2025
+ cd faculdade-mba-es-29-project-bootcamp-2025
+ ```
+ 
+2. **Gestão de Dependências**:
+ ```bash
+ npm install
+ ```
+ 
+3. **Configuração de Variáveis de Ambiente**:
+Crie um arquivo `.env.local` na raiz do projeto:
+ ```env
+ NEXT_PUBLIC_SUPABASE_URL=sua-url-do-supabase
+ NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anonima
+ SUPABASE_SERVICE_ROLE_KEY=sua-chave-de-servico
+ ```
+ 
+4. **Provisionamento do Schema (SQL)**:
+Execute os artefatos SQL localizados em `/scripts` no SQL Editor do Supabase seguindo a ordem de precedência numérica.
+ 
+5. **Execução do Servidor**:
+ ```bash
+ npm run dev
+ ```
+O ambiente estará disponível em `http://localhost:3000`.
 
-3. Execute o servidor de desenvolvimento:
-   ```bash
-   npm run dev
-   ```
+## Credenciais de Demonstração (Admin)
 
-4. Acesse no navegador:
-   ```
-   http://localhost:3000
-   ```
+- **Identifier**: `admin@admin.com`
+- **Passphrase**: `admin123`
 
----
+*Nota: Estas credenciais são destinadas exclusivamente a ambientes de estúdio e testes.*
 
-## Credenciais de Teste
-Para acessar o sistema com perfil **Administrador**, utilize as credenciais abaixo:
+## Modelo de Dados (Schema)
 
-- **Usuário:** `admin@admin.com`  
-- **Senha:** `admin123`  
-
-Essas credenciais são fornecidas apenas para fins de **demonstração e testes**.
+- **`profiles`**: Extensão de usuários (roles e vínculos).
+- **`unidades`**: Locais de armazenamento.
+- **`categorias`**: Classificação de inventário.
+- **`produtos`**: Cadastro de itens e níveis críticos.
+- **`movimentacoes`**: Histórico de entradas e saídas.
+- **`notificacoes`**: Registro de alertas e eventos.
 
 ---
 
