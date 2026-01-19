@@ -2,6 +2,8 @@
  
 Solução avançada para Gestão de Inventário e Controle Logístico, projetada com foco em rastreabilidade transacional, segurança granular e integridade de dados multi-unidade.
 
+📖 **[Acesse o Manual do Usuário Completo](./MANUAL_USUARIO.md)**
+
 ## Stack Técnica
 
 ### Frontend & Core
