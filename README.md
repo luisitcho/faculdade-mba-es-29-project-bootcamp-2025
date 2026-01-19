@@ -30,108 +30,98 @@ Solução avançada para Gestão de Inventário e Controle Logístico, projetada
 ### Infraestrutura
 - **Vercel**: Deployment, CI/CD e Analytics.
 
-## Funcionalidades e Módulos
+---
 
-### Autenticação & RBAC
-- Gestão de identidade via **Supabase Auth**.
-- Perfis de acesso: `Admin`, `Operador`, `Consulta`.
-- Proteção de rotas e APIs via Middleware.
+## Guia de Utilização (Passo a Passo)
 
-### Gestão de Unidades & Inventário
-- Cadastro e CRUD de unidades físicas.
-- Controle de estoque segmentado por localização.
+Para operar o sistema pela primeira vez, siga este fluxo:
 
-### Catálogo & Controle de Estoque
-- Categorização de produtos e controle de estoque mínimo.
-- Gatilhos para alertas de reposição.
-- Movimentação rápida de inventário.
+### 1. Acesso Inicial
+- Acesse a página de login e utilize as **Credenciais de Teste** (disponíveis ao final deste documento).
+- Ao entrar, você será direcionado para o **Dashboard**, onde terá uma visão geral do estoque.
 
-### Auditoria & Relatórios
-- Log imutável de entradas e saídas (Audit Trail).
-- Exportação de dados em **XLSX/CSV**.
-- Dashboard com indicadores (KPIs) e gráficos Recharts.
+### 2. Cadastrando Unidades
+- Vá até o módulo **Unidades**.
+- Cadastre os locais físicos (ex: Almoxarifado Central, Unidade Norte). Isso permite que você segmente o estoque por localização.
 
-### Notificações
-- Alertas automáticos de estoque crítico.
-- Central de notificações em tempo real.
+### 3. Gerenciando o Catálogo (Produtos)
+- No módulo **Produtos**, adicione os itens que serão controlados.
+- **Importante**: Defina um **Estoque Mínimo**. Quando o saldo cair abaixo desse valor, o sistema gerará alertas automáticos no Dashboard e na Central de Notificações.
 
-## Segurança
+### 4. Realizando Movimentações
+- Para atualizar o estoque, utilize o módulo **Movimentações**.
+- **Entrada**: Use quando receber novos itens (compras, doações).
+- **Saída**: Use para registrar o consumo ou distribuição de itens.
+- O sistema registra o histórico imutável de quem realizou a ação e quando.
 
-- **Auth**: JWT via Supabase.
-- **Data**: Row Level Security (RLS) no PostgreSQL.
-- **Routes**: Proteção via Next.js Middleware.
-- **Validation**: Validação de schemas com Zod.
-- **RBAC**: Controle de permissões granular por nível de usuário.
+### 5. Monitoramento e Notificações
+- Fique atento à **Central de Notificações** (ícone de sino no topo).
+- O Dashboard mostrará gráficos em tempo real sobre a distribuição dos produtos e quais itens precisam de reposição urgente.
+- **Dica**: Utilize o card de **Ações Rápidas** no final da página inicial para cadastrar produtos ou registrar movimentações com apenas um clique.
+
+### 6. Exportação de Relatórios
+- No módulo de **Relatórios**, você pode filtrar movimentações por data ou tipo.
+- Utilize o botão de exportação para baixar planilhas **XLSX** ou arquivos **CSV** para auditoria externa.
+
+---
+
+## Módulos do Sistema
+
+- **Auth & RBAC**: Gestão de identidade e perfis (`Admin`, `Operador`, `Consulta`).
+- **Unidades**: Gestão de locais físicos de armazenamento.
+- **Produtos**: Catálogo mestre com controle de níveis críticos.
+- **Movimentações**: Ledger transacional (Audit Trail) de entradas e saídas.
+- **Analytics**: Dashboard com KPIs e gráficos dinâmicos.
+- **Notificações**: Alertas automáticos de estoque baixo em tempo real.
 
 ## Estrutura do Projeto
 
-A organização dos diretórios segue as convenções do Next.js com foco em separação de preocupações:
-
 ```
 ├── app/                  # Rotas, layouts e Server Components (App Router)
-│   ├── api/              # Endpoints transacionais e exportação de dados
-│   ├── auth/             # Fluxos de autenticação (Login/Cadastro)
-│   └── dashboard/        # Módulos principais do sistema (Produtos, Relatórios, etc)
-├── components/           # UI Components (Átomos, Moléculas e Organismos)
-│   └── ui/               # Componentes base do Design System (Radix/shadcn)
-├── lib/                  # Configurações de clientes (Supabase, Excel) e utilitários
-├── scripts/              # Migrations e esquemas SQL do banco de dados
-├── hooks/                # Custom React Hooks para lógica de estado complexa
-└── middleware.ts         # Orquestração de segurança e redirecionamento de rotas
+│   ├── auth/             # Fluxos de autenticação
+│   └── dashboard/        # Módulos principais (Produtos, Relatórios, etc)
+├── components/           # UI Components reutilizáveis
+├── lib/                  # Clientes (Supabase, Excel) e utilitários
+├── scripts/              # Migrations e esquemas SQL
+└── middleware.ts         # Segurança e controle de rotas
 ```
 
-## Setup do Ambiente de Desenvolvimento
- 
- ### Pré-requisitos
-- **Runtime**: Node.js 18.x ou superior.
-- **Database Manager**: Acesso administrativo a uma instância **Supabase**.
-- **Package Manager**: npm, yarn ou pnpm.
- 
-### Guia de Instalação
- 
-1. **Cópia do Repositório**:
- ```bash
- git clone https://github.com/luisitcho/faculdade-mba-es-29-project-bootcamp-2025
- cd faculdade-mba-es-29-project-bootcamp-2025
- ```
- 
-2. **Gestão de Dependências**:
- ```bash
- npm install
- ```
- 
-3. **Configuração de Variáveis de Ambiente**:
-Crie um arquivo `.env.local` na raiz do projeto:
- ```env
- NEXT_PUBLIC_SUPABASE_URL=sua-url-do-supabase
- NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anonima
- SUPABASE_SERVICE_ROLE_KEY=sua-chave-de-servico
- ```
- 
-4. **Provisionamento do Schema (SQL)**:
-Execute os artefatos SQL localizados em `/scripts` no SQL Editor do Supabase seguindo a ordem de precedência numérica.
- 
-5. **Execução do Servidor**:
- ```bash
- npm run dev
- ```
-O ambiente estará disponível em `http://localhost:3000`.
+## Setup e Instalação
 
-## Credenciais de Demonstração (Admin)
+### Pré-requisitos
+- Node.js 18.x+
+- Instância do Supabase configurada
 
-- **Identifier**: `admin@admin.com`
-- **Passphrase**: `admin123`
+### Execução Local
 
-*Nota: Estas credenciais são destinadas exclusivamente a ambientes de estúdio e testes.*
+1. **Clone e Instalação**:
+   ```bash
+   git clone https://github.com/luisitcho/faculdade-mba-es-29-project-bootcamp-2025
+   cd faculdade-mba-es-29-project-bootcamp-2025
+   npm install
+   ```
 
-## Modelo de Dados (Schema)
+2. **Variáveis de Ambiente**:
+   Crie um arquivo `.env.local`:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=sua-url-do-supabase
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anonima
+   SUPABASE_SERVICE_ROLE_KEY=sua-chave-de-servico
+   ```
 
-- **`profiles`**: Extensão de usuários (roles e vínculos).
-- **`unidades`**: Locais de armazenamento.
-- **`categorias`**: Classificação de inventário.
-- **`produtos`**: Cadastro de itens e níveis críticos.
-- **`movimentacoes`**: Histórico de entradas e saídas.
-- **`notificacoes`**: Registro de alertas e eventos.
+3. **Banco de Dados**:
+   Execute os scripts SQL da pasta `/scripts` no editor SQL do Supabase.
+
+4. **Start**:
+   ```bash
+   npm run dev
+   ```
+
+---
+
+## Credenciais de Teste (Admin)
+- **Usuário**: `admin@admin.com`
+- **Senha**: `admin123`
 
 ---
 
@@ -146,4 +136,4 @@ O ambiente estará disponível em `http://localhost:3000`.
 - Vitor Fernandes Palha
 - Vitor Pereira Rocha
 
-Projeto desenvolvido durante o Bootcamp como prática de desenvolvimento web fullstack.
+*Projeto desenvolvido durante o Bootcamp como prática de desenvolvimento web fullstack.*
