@@ -121,9 +121,18 @@ Para operar o sistema pela primeira vez, siga este fluxo:
 
 ---
 
-## Credenciais de Teste (Admin)
-- **Usuário**: `admin@admin.com`
-- **Senha**: `admin123`
+## 🌐 Demonstração Online
+
+Acesse a aplicação em produção: [https://v0-simple-inventory-system-red.vercel.app/](https://v0-simple-inventory-system-red.vercel.app/)
+
+### Credenciais de Teste
+
+| Perfil | Usuário | Senha |
+| :--- | :--- | :--- |
+| **Administrador** | `admin@admin.com` | `admin123` |
+| **Consultor** | `luishenrisc2@gmail.com` | `123456` |
+
+*Nota: Estas credenciais são destinadas exclusivamente a fins de demonstração e testes.*
 
 ---
 
