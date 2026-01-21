@@ -130,7 +130,7 @@ Acesse a aplicação em produção: [https://v0-simple-inventory-system-red.verc
 | Perfil | Usuário | Senha |
 | :--- | :--- | :--- |
 | **Administrador** | `admin@admin.com` | `admin123` |
-| **Consultor** | `luishenrisc2@gmail.com` | `123456` |
+| **Consultor** | `consultor@gmail.com` | `123456` |
 
 *Nota: Estas credenciais são destinadas exclusivamente a fins de demonstração e testes.*
 
