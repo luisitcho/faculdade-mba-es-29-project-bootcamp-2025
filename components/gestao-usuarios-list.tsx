@@ -89,7 +89,19 @@ export function GestaoUsuariosList({
   }
 
   const canEditUser = (usuario: Usuario) => {
-    return isMainAdmin && usuario.id !== currentUserProfile.id
+    // Não pode editar/remover a si mesmo por aqui
+    if (usuario.id === currentUserProfile?.id) return false
+
+    const isOwner = currentUserProfile?.email === "luishenrisc1@gmail.com"
+    const targetIsAdmin = usuario.perfil_acesso === "admin" || usuario.perfil_acesso === "super_admin"
+
+    // Se o alvo for admin, apenas o usuário específico (Owner) pode remover/editar
+    if (targetIsAdmin) {
+      return isOwner
+    }
+
+    // Se o alvo não for admin, qualquer admin pode remover/editar
+    return isMainAdmin
   }
 
   const getAvailableProfiles = () => {
